@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Indoor Air monitor</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="assets/vendors/ti-icons/css/themify-icons.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
+    <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css">
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css">
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- End layout styles -->
+    <link rel="shortcut icon" href="assets/images/favicon.png" />
+  </head>
+  <body>
+    <div class="container-scroller">
+      <!-- partial:partials/_navbar.html -->
+      <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+        <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
+          <a class="navbar-brand brand-logo" href="index.html">Indoor Air monitor</a>
+          <a class="navbar-brand brand-logo-mini" href="index.html">IAM</a>
+        </div>
+        <div class="navbar-menu-wrapper d-flex align-items-stretch">
+          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize" title="Toggle navigation menu" aria-label="Toggle navigation menu">
+            <span class="mdi mdi-menu"></span>
+          </button>
+          <div class="search-field d-none d-md-block">
+            <form class="d-flex align-items-center h-100" action="#">
+              <div class="input-group">
+                <div class="input-group-prepend bg-transparent">
+                  <i class="input-group-text border-0 mdi mdi-magnify"></i>
+                </div>
+                <input type="text" class="form-control bg-transparent border-0" placeholder="Search projects">
+              </div>
+            </form>
+          </div>
+
+
+        <ul class="navbar-nav navbar-nav-right">
+          <li class="nav-item">
+            <p class="nav-link mb-0" id="subscriber-email-top"></p>
+          </li>
+        </ul>
+          <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-toggle="offcanvas" title="Toggle navigation menu" aria-label="Toggle navigation menu">
+            <span class="mdi mdi-menu"></span>
+          </button>
+        </div>
+      </nav>
+
+
+      <!-- partial -->
+      <div class="container-fluid page-body-wrapper">
+        <!-- partial:partials/_sidebar.html -->
+        <nav class="sidebar sidebar-offcanvas" id="sidebar">
+
+        <ul class="nav">
+          <li class="nav-item nav-profile">
+            <a href="#" class="nav-link">
+              <div class="nav-profile-text d-flex flex-column">
+                <span class="font-weight-bold mb-2" id="subscriber-email-sidebar"></span>
+                <span class="text-secondary text-small">Subscriber</span>
+              </div>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">
+              <span class="menu-title">Dashboard</span>
+              <i class="mdi mdi-home menu-icon"></i>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="charts.html">
+              <span class="menu-title">Charts</span>
+              <i class="mdi mdi-chart-bar menu-icon"></i>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="subscriber.html">
+              <span class="menu-title">Subscribe</span>
+              <i class="mdi mdi-bell-ring menu-icon"></i>
+            </a>
+          </li>
+
+        </ul>
+
+        </nav>
+        <!-- partial -->
+        <div class="main-panel">
+          <div class="content-wrapper">
+            <h3 class="mb-4">Live Readings</h3>
+            <div class="row mb-4">
+              <div class="col-md-2 stretch-card grid-margin">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5>Temperature</h5>
+                    <h2 id="temp-live">-- °C</h2>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-2 stretch-card grid-margin">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5>Humidity</h5>
+                    <h2 id="humidity-live">-- %</h2>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-2 stretch-card grid-margin">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5>VOC</h5>
+                    <h2 id="voc-live">-- ppb</h2>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-2 stretch-card grid-margin">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5>CO₂</h5>
+                    <h2 id="co2-live">-- ppm</h2>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-2 stretch-card grid-margin">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <h5>IAQ</h5>
+                    <h2 id="iaq-live">--</h2>
+                  </div>
+                </div>
+              </div>
+               <div class="col-md-2 stretch-card grid-margin">
+              <div class="card text-center bg-gradient-danger text-white" id="alert-card">
+                <div class="card-body">
+                  <h4 class="card-title">ALERT</h4>
+                  <h2 id="alert-text">Threshold Exceeded!</h2>
+                </div>
+              </div>
+            </div>
+            </div>
+
+          <div class="row mb-2">
+            <div class="col-12 d-flex align-items-center">
+              <label for="history-date" class="me-2 mb-0">View history for date:</label>
+              <input id="history-date" type="date" class="form-control w-auto me-3" />
+            </div>
+          </div>            
+
+            <div class="row mb-4">
+              <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                  <div class="card-body">
+                    <h4 class="card-title">Temperature History</h4>
+                    <canvas id="temp-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                  <div class="card-body">
+                    <h4 class="card-title">Humidity History</h4>
+                    <canvas id="humidity-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+           <div class="row mb-4">
+              <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                  <div class="card-body">
+                    <h4 class="card-title">IAQ History</h4>
+                    <canvas id="temp-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                  <div class="card-body">
+                    <h4 class="card-title">TVOC History</h4>
+                    <canvas id="humidity-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+           <div class="row mb-4">
+              <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                  <div class="card-body">
+                    <h4 class="card-title">ECO2 History</h4>
+                    <canvas id="temp-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+        
+            <div class="row mt-4">
+              <div class="col-md-6 grid-margin stretch-card">
+                <div class="card">
+                  <div class="card-body text-center">
+                    <h4 class="card-title mb-3">Subscribe for Alerts</h4>
+                    <p class="text-muted mb-4">Get email notifications for air quality updates.</p>
+                    <a href="subscriber.html" class="btn btn-primary">Subscribe</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- partial:partials/_footer.html -->
+          <footer class="footer">
+            <div class="d-sm-flex justify-content-center justify-content-sm-between">
+              <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Indoor-Air-quality © 2025 </span>
+              <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center">Hand-crafted & made with <i class="mdi mdi-heart text-danger"></i></span>
+            </div>
+          </footer>
+          <!-- partial -->
+        </div>
+        <!-- main-panel ends -->
+      </div>
+      <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    <!-- plugins:js -->
+    <script src="assets/vendors/js/vendor.bundle.base.js"></script>
+    <!-- endinject -->
+    <!-- Plugin js for this page -->
+    <script src="assets/vendors/chart.js/chart.umd.js"></script>
+    <script src="assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
+    <!-- End plugin js for this page -->
+    <!-- inject:js -->
+    <script src="assets/js/off-canvas.js"></script>
+    <script src="assets/js/misc.js"></script>
+    <script src="assets/js/settings.js"></script>
+    <script src="assets/js/todolist.js"></script>
+    <script src="assets/js/jquery.cookie.js"></script>
+    <!-- endinject -->
+    <!-- Custom js for this page -->
+    <script src="assets/js/dashboard.js"></script>
+    <!-- End custom js for this page -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/charts.js"></script>
+    
+    <script>
+      async function fetchLiveData() {
+        try {
+          const res = await fetch("http://127.0.0.1:8000/data/latest-single");
+          const data = await res.json();
+          document.getElementById("temp-live").textContent = data.temperature + " °C";
+          document.getElementById("humidity-live").textContent = data.humidity + " %";
+          document.getElementById("voc-live").textContent = data.tvoc + " ppb";
+          document.getElementById("co2-live").textContent = data.eco2 + " ppm";
+          document.getElementById("iaq-live").textContent = data.iaq;
+        } catch (err) {
+          console.error("Error fetching live data", err);
+        }
+      }
+      setInterval(fetchLiveData, 5000);
+      fetchLiveData();
+
+      // Optional: subscription form submit
+      document.getElementById("subscribe-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("subscriber-email").value;
+        // POST request to backend
+        const res = await fetch("http://127.0.0.1:8000/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        if (res.ok) {
+          document.getElementById("subscribe-message").textContent = "Subscribed successfully!";
+          document.getElementById("subscriber-email").value = "";
+        } else {
+          document.getElementById("subscribe-message").textContent = "Subscription failed.";
+        }
+      });
+    </script>
+    <script>
+      const subscriberEmail = "subscriber@example.com"; // replace dynamically from backend
+      document.getElementById("subscriber-email-top").innerText = subscriberEmail;
+      document.getElementById("subscriber-email-sidebar").innerText = subscriberEmail;
+    </script>
+
+
+  </body>
+</html>
