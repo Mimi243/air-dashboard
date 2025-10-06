@@ -117,6 +117,8 @@
 
     <script>
       // ✅ Handle subscription form
+
+      const API_URL = "https://air-api-9qw4.onrender.com";
       document.getElementById("subscribe-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("subscriber-email").value.trim();
@@ -129,7 +131,7 @@
         }
 
         try {
-          const res = await fetch("http://127.0.0.1:8000/subscribe", {
+          const res = await fetch(`${API_URL}/subscribe`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
