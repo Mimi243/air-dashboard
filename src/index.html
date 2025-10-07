@@ -265,7 +265,7 @@ async function fetchLiveData() {
     // Update alert card
     let alerts = [];
 
-    if (data.temperature !== null && data.temperature < 18 || data.temperature > 26) {
+    if (data.temperature !== null && (data.temperature < 18 || data.temperature > 26)) {
       alerts.push(`Temperature Alert! (${data.temperature}°C)`);
     }
     if (data.humidity !== null && (data.humidity < 30 || data.humidity > 60)) {
