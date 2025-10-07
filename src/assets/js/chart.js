@@ -1,4 +1,4 @@
-const API_BASE = 'https://your-render-api-url.com'; // <-- Replace with your API
+const API_BASE = 'https://air-api-9qw4.onrender.com'; // <-- Replace with your API
 
 const metrics = [
   { key: 'temperature', label: 'Temperature', maxValue: 50, unit: '°C' },
