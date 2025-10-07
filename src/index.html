@@ -259,8 +259,8 @@ async function fetchLiveData() {
     if(data.temperature !== null) { tempCircle.set(data.temperature/50); tempCircle.setText(`${data.temperature}°C`); }
     if(data.humidity !== null) { humidityCircle.set(data.humidity/100); humidityCircle.setText(`${data.humidity}%`); }
     if(data.iaq !== null) { iaqCircle.set(data.iaq/500); iaqCircle.setText(`${data.iaq}`); }
-    if(data.tvoc !== null) { tvocCircle.set(data.tvoc/1000); tvocCircle.setText(`${data.tvoc} ppb`); }
-    if(data.eco2 !== null) { co2Circle.set(data.eco2/2000); co2Circle.setText(`${data.eco2} ppm`); }
+    if(data.voc !== null) { vocCircle.set(data.voc/1000); vocCircle.setText(`${data.voc} ppb`); }
+    if(data.co2 !== null) { co2Circle.set(data.co2/2000); co2Circle.setText(`${data.co2} ppm`); }
 
     // Update alert card
     const alertCard = document.getElementById('alert-card');
@@ -271,7 +271,7 @@ async function fetchLiveData() {
     if(data.temperature < 18 || data.temperature > 26) { alertMessage="Temperature Alert!"; alertClass="bg-gradient-danger"; }
     else if(data.humidity < 30 || data.humidity > 60) { alertMessage="Humidity Alert!"; alertClass="bg-gradient-danger"; }
     else if(data.voc > 500) { alertMessage="VOC Alert!"; alertClass="bg-gradient-danger"; }
-    else if(data.eco2 > 1000) { alertMessage="CO2 Alert!"; alertClass="bg-gradient-danger"; }
+    else if(data.co2 > 1000) { alertMessage="CO2 Alert!"; alertClass="bg-gradient-danger"; }
 
     alertCard.classList.remove("bg-gradient-primary","bg-gradient-danger");
     alertCard.classList.add(alertClass);
