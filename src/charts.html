@@ -19,19 +19,32 @@
       <!-- Navbar -->
       <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
         <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
-          <a class="navbar-brand brand-logo" href="../../index.html">
-            <img src="../../assets/images/logo.svg" alt="logo" />
-          </a>
-          <a class="navbar-brand brand-logo-mini" href="../../index.html">
-            <img src="../../assets/images/logo-mini.svg" alt="logo" />
-          </a>
+          <a class="navbar-brand brand-logo" href="index.html">Indoor Air Monitor</a>
+          <a class="navbar-brand brand-logo-mini" href="index.html">IAM</a>
+        </div>
+        <div class="navbar-menu-wrapper d-flex align-items-stretch">
+          <button class="navbar-toggler align-self-center" type="button" data-toggle="minimize" aria-label="Toggle navigation">
+            <span class="mdi mdi-menu"></span>
+          </button>
+          <ul class="navbar-nav navbar-nav-right">
+            <li class="nav-item">
+              <p class="nav-link mb-0" id="subscriber-email-top"></p>
+            </li>
+          </ul>
         </div>
       </nav>
 
       <div class="container-fluid page-body-wrapper">
-        <!-- Sidebar -->
         <nav class="sidebar sidebar-offcanvas" id="sidebar">
           <ul class="nav">
+            <li class="nav-item nav-profile">
+              <a href="#" class="nav-link">
+                <div class="nav-profile-text d-flex flex-column">
+                  <span class="font-weight-bold mb-2" id="subscriber-email-sidebar"></span>
+                  <span class="text-secondary text-small">Subscriber</span>
+                </div>
+              </a>
+            </li>
             <li class="nav-item">
               <a class="nav-link" href="index.html">
                 <span class="menu-title">Dashboard</span>
@@ -41,14 +54,15 @@
             <li class="nav-item">
               <a class="nav-link" href="charts.html">
                 <span class="menu-title">Charts</span>
-                <i class="mdi mdi-chart-line menu-icon"></i>
+                <i class="mdi mdi-chart-bar menu-icon"></i>
               </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="subscriber.html">
                 <span class="menu-title">Subscribe</span>
-                <i class="mdi mdi-table-large menu-icon"></i>
+                <i class="mdi mdi-bell-ring menu-icon"></i>
               </a>
+            </li>
           </ul>
         </nav>
 
