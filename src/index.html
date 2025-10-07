@@ -255,28 +255,26 @@ async function fetchLiveData() {
     const res = await fetch(`${API_URL}/data/latest-single`);
     const data = await res.json();
 
-    // Update circular progress bars
-    if(data.temperature !== null) { tempCircle.set(data.temperature/50); tempCircle.setText(`${data.temperature}°C`); }
-    if(data.humidity !== null) { humidityCircle.set(data.humidity/100); humidityCircle.setText(`${data.humidity}%`); }
-    if(data.iaq !== null) { iaqCircle.set(data.iaq/500); iaqCircle.setText(`${data.iaq}`); }
-    if(data.voc !== null) { vocCircle.set(data.voc/1000); vocCircle.setText(`${data.voc} ppb`); }
-    if(data.co2 !== null) { co2Circle.set(data.co2/2000); co2Circle.setText(`${data.co2} ppm`); }
+    // --- Convert readings to numbers ---
+    const temp = Number(data.temperature);
+    const hum  = Number(data.humidity);
+    const voc  = Number(data.voc);
+    const co2  = Number(data.co2);
+    const iaq  = Number(data.iaq);
 
-    // Update alert card
-    let alerts = [];
+    // --- Update circular progress bars ---
+    if (!isNaN(temp)) tempCircle.set(temp/50); tempCircle.setText(`${temp}°C`);
+    if (!isNaN(hum))  humidityCircle.set(hum/100); humidityCircle.setText(`${hum}%`);
+    if (!isNaN(iaq))  iaqCircle.set(iaq/500); iaqCircle.setText(`${iaq}`);
+    if (!isNaN(voc))  vocCircle.set(voc/1000); vocCircle.setText(`${voc} ppb`);
+    if (!isNaN(co2))  co2Circle.set(co2/2000); co2Circle.setText(`${co2} ppm`);
 
-    if (data.temperature !== null && (data.temperature < 18 || data.temperature > 26)) {
-      alerts.push(`Temperature Alert! (${data.temperature}°C)`);
-    }
-    if (data.humidity !== null && (data.humidity < 30 || data.humidity > 60)) {
-      alerts.push(`Humidity Alert! (${data.humidity}%)`);
-    }
-    if (data.voc !== null && data.voc > 500) {
-      alerts.push(`VOC Alert! (${data.voc} ppb)`);
-    }
-    if (data.co2 !== null && data.co2 > 1000) {
-      alerts.push(`CO2 Alert! (${data.co2} ppm)`);
-    }
+    // --- Alert logic ---
+    const alerts = [];
+    if (!isNaN(temp) && (temp < 18 || temp > 26)) alerts.push(`Temperature Alert! (${temp}°C)`);
+    if (!isNaN(hum)  && (hum < 30 || hum > 60))   alerts.push(`Humidity Alert! (${hum}%)`);
+    if (!isNaN(voc)  && voc > 500)               alerts.push(`VOC Alert! (${voc} ppb)`);
+    if (!isNaN(co2)  && co2 > 1000)              alerts.push(`CO2 Alert! (${co2} ppm)`);
 
     const alertCard = document.getElementById('alert-card');
     const alertText = document.getElementById('alert-text');
@@ -290,7 +288,6 @@ async function fetchLiveData() {
       alertCard.classList.add("bg-gradient-primary");
       alertText.innerText = "All Good";
     }
-
   } catch(err){
     console.error("Error fetching live data:",err);
   }
