@@ -263,19 +263,33 @@ async function fetchLiveData() {
     if(data.co2 !== null) { co2Circle.set(data.co2/2000); co2Circle.setText(`${data.co2} ppm`); }
 
     // Update alert card
+    let alerts = [];
+
+    if (data.temperature !== null && data.temperature < 18 || data.temperature > 26) {
+      alerts.push(`Temperature Alert! (${data.temperature}°C)`);
+    }
+    if (data.humidity !== null && (data.humidity < 30 || data.humidity > 60)) {
+      alerts.push(`Humidity Alert! (${data.humidity}%)`);
+    }
+    if (data.voc !== null && data.voc > 500) {
+      alerts.push(`VOC Alert! (${data.voc} ppb)`);
+    }
+    if (data.co2 !== null && data.co2 > 1000) {
+      alerts.push(`CO2 Alert! (${data.co2} ppm)`);
+    }
+
     const alertCard = document.getElementById('alert-card');
     const alertText = document.getElementById('alert-text');
-    let alertMessage = "All Good";
-    let alertClass = "bg-gradient-primary";
 
-    if(data.temperature < 18 || data.temperature > 26) { alertMessage="Temperature Alert!"; alertClass="bg-gradient-danger"; }
-    else if(data.humidity < 30 || data.humidity > 60) { alertMessage="Humidity Alert!"; alertClass="bg-gradient-danger"; }
-    else if(data.voc > 500) { alertMessage="VOC Alert!"; alertClass="bg-gradient-danger"; }
-    else if(data.co2 > 1000) { alertMessage="CO2 Alert!"; alertClass="bg-gradient-danger"; }
-
-    alertCard.classList.remove("bg-gradient-primary","bg-gradient-danger");
-    alertCard.classList.add(alertClass);
-    alertText.innerText = alertMessage;
+    if (alerts.length > 0) {
+      alertCard.classList.remove("bg-gradient-primary");
+      alertCard.classList.add("bg-gradient-danger");
+      alertText.innerText = alerts.join(" | ");
+    } else {
+      alertCard.classList.remove("bg-gradient-danger");
+      alertCard.classList.add("bg-gradient-primary");
+      alertText.innerText = "All Good";
+    }
 
   } catch(err){
     console.error("Error fetching live data:",err);
