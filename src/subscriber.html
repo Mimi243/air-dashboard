@@ -116,9 +116,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-      // ✅ Handle subscription form
-
       const API_URL = "https://air-api-9qw4.onrender.com";
+
+      // --- Handle subscription form ---
       document.getElementById("subscribe-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("subscriber-email").value.trim();
@@ -138,13 +138,11 @@
           });
 
           if (res.ok) {
-            localStorage.setItem("subscriberEmail", email); // store locally
-            document.getElementById("subscriber-email-top").innerText = email;
-            document.getElementById("subscriber-email-sidebar").innerText = email;
             message.textContent = "Subscribed successfully!";
             message.classList.remove("text-danger");
             message.classList.add("text-success");
             document.getElementById("subscriber-email").value = "";
+            loadSubscriberEmail(); // Refresh displayed subscriber
           } else {
             message.textContent = "Subscription failed. Try again later.";
             message.classList.add("text-danger");
@@ -156,12 +154,24 @@
         }
       });
 
-      // ✅ Load stored subscriber email (if any)
-      const savedEmail = localStorage.getItem("subscriberEmail");
-      if (savedEmail) {
-        document.getElementById("subscriber-email-top").innerText = savedEmail;
-        document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
+      // --- Function to load the latest subscriber from backend ---
+      async function loadSubscriberEmail() {
+        try {
+          const res = await fetch(`${API_URL}/subscribers/latest`);
+          if (!res.ok) return;
+
+          const data = await res.json();
+          if (data.email) {
+            document.getElementById("subscriber-email-top").innerText = data.email;
+            document.getElementById("subscriber-email-sidebar").innerText = data.email;
+          }
+        } catch (err) {
+          console.error("Error fetching latest subscriber:", err);
+        }
       }
+
+      // --- Load subscriber on page load ---
+      loadSubscriberEmail();
     </script>
   </body>
 </html>
