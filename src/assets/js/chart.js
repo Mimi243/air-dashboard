@@ -1,141 +1,161 @@
-$(function () {
-  'use strict';
+// -------------------------------
+// Air Dashboard Chart + Live Data
+// -------------------------------
 
-  const API_BASE = "https://air-api-9qw4.onrender.com";
+const API_BASE = "https://air-api-9qw4.onrender.com"; // your Render API
 
-  // --- Common chart options ---
-  const commonOptions = {
-    responsive: true,
-    plugins: { legend: { display: true } },
-    scales: { y: { beginAtZero: true } },
-    elements: { line: { tension: 0.3 }, point: { radius: 3 } }
-  };
+// Define the metrics we track
+const metrics = [
+  { key: "temperature", label: "Temperature (°C)", color: "#ff6384", max: 50 },
+  { key: "humidity", label: "Humidity (%)", color: "#36a2eb", max: 100 },
+  { key: "iaq", label: "IAQ", color: "#4bc0c0", max: 500 },
+  { key: "voc", label: "TVOC (ppb)", color: "#9966ff", max: 1000 },
+  { key: "co2", label: "eCO₂ (ppm)", color: "#ff9f40", max: 2000 },
+];
 
-  // --- Metrics configuration ---
-  const metrics = [
-    { key: "temperature", label: "Temperature (°C)", borderColor: "rgba(255,99,132,1)", bgColor: "rgba(255,99,132,0.2)", canvasId: "temp-chart", maxValue: 50 },
-    { key: "humidity", label: "Humidity (%)", borderColor: "rgba(54,162,235,1)", bgColor: "rgba(54,162,235,0.2)", canvasId: "humidity-chart", maxValue: 100 },
-    { key: "iaq", label: "IAQ", borderColor: "rgba(255,206,86,1)", bgColor: "rgba(255,206,86,0.2)", canvasId: "iaq-chart", maxValue: 500 },
-    { key: "co2", label: "eCO₂ (ppm)", borderColor: "rgba(75,192,192,1)", bgColor: "rgba(75,192,192,0.2)", canvasId: "eco2-chart", maxValue: 2000 },
-    { key: "voc", label: "TVOC (ppb)", borderColor: "rgba(153,102,255,1)", bgColor: "rgba(153,102,255,0.2)", canvasId: "tvoc-chart", maxValue: 1000 }
-  ];
+let chartMap = {};
+let circularMap = {};
 
-  let chartObjects = {};
+// -------------------
+// Circular indicators
+// -------------------
+function initCirculars() {
+  metrics.forEach((m) => {
+    const el = document.getElementById(`${m.key}-progress`);
+    if (el) {
+      circularMap[m.key] = new ProgressBar.Circle(`#${m.key}-progress`, {
+        strokeWidth: 6,
+        color: m.color,
+        trailColor: "#eee",
+        trailWidth: 6,
+        text: { value: "0", style: { color: "#333", fontSize: "16px" } },
+        svgStyle: { width: "80px", height: "80px" },
+      });
+    }
+  });
+}
 
-  // --- Fetch and render historical data ---
-  async function fetchHistoricalData(date) {
-    try {
-      for (const metric of metrics) {
-        let url = `${API_BASE}/data/history?metric=${metric.key}`;
-        if (date) url += `&date=${date}`;
+async function fetchLatest() {
+  if (Object.keys(circularMap).length === 0) return;
+  try {
+    const res = await fetch(`${API_BASE}/data/latest-single`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const latest = await res.json();
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json(); // {labels, values}
-
-        const labels = data.labels.map(t => new Date(t).toLocaleTimeString());
-        const values = data.values;
-
-        if ($("#" + metric.canvasId).length) {
-          const ctx = $("#" + metric.canvasId).get(0).getContext("2d");
-
-          if (chartObjects[metric.canvasId]) {
-            chartObjects[metric.canvasId].data.labels = labels;
-            chartObjects[metric.canvasId].data.datasets[0].data = values;
-            chartObjects[metric.canvasId].update();
-          } else {
-            chartObjects[metric.canvasId] = new Chart(ctx, {
-              type: 'line',
-              data: {
-                labels,
-                datasets: [{
-                  label: metric.label,
-                  data: values,
-                  borderColor: metric.borderColor,
-                  backgroundColor: metric.bgColor,
-                  borderWidth: 2,
-                  fill: true
-                }]
-              },
-              options: commonOptions
-            });
-          }
-        }
+    metrics.forEach((m) => {
+      const val = latest[m.key];
+      const circle = circularMap[m.key];
+      if (circle && val !== null && val !== undefined) {
+        const ratio = Math.min(val / m.max, 1);
+        circle.set(ratio);
+        let unit =
+          m.key === "temperature"
+            ? "°C"
+            : m.key === "humidity"
+            ? "%"
+            : m.key === "voc"
+            ? " ppb"
+            : m.key === "co2"
+            ? " ppm"
+            : "";
+        circle.setText(`${val}${unit}`);
       }
-    } catch (err) {
-      console.error("Error fetching historical data:", err);
-    }
+    });
+  } catch (err) {
+    console.error("fetchLatest error", err);
   }
+}
 
-  // --- Fetch latest readings for circular progress bars ---
-  async function fetchLatestReadings() {
-    try {
-      const res = await fetch(`${API_BASE}/data/latest-single`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const latest = await res.json();
-
-      const circularMapping = {
-        temperature: '#temp-progress',
-        humidity: '#humidity-progress',
-        iaq: '#iaq-progress',
-        voc: '#tvoc-progress',
-        co2: '#eco2-progress'
-      };
-
-      metrics.forEach(metric => {
-        const selector = circularMapping[metric.key];
-        const value = latest[metric.key];
-        if (selector && value !== null && window[selector]) {
-          const progressCircle = window[selector];
-          const ratio = Math.min(value / metric.maxValue, 1.0);
-          progressCircle.set(ratio);
-          const unit =
-            metric.key === 'temperature' ? '°C' :
-            metric.key === 'humidity' ? '%' :
-            metric.key === 'co2' ? ' ppm' :
-            metric.key === 'voc' ? ' ppb' : '';
-          progressCircle.setText(`${value}${unit}`);
-        }
+// -------------------
+// Line charts (historical)
+// -------------------
+function initCharts() {
+  metrics.forEach((m) => {
+    const canvas = document.getElementById(`${m.key}Chart`);
+    if (canvas) {
+      chartMap[m.key] = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: m.label,
+              data: [],
+              borderColor: m.color,
+              borderWidth: 2,
+              fill: false,
+              tension: 0.3,
+              pointRadius: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true } },
+          scales: {
+            x: { title: { display: false } },
+            y: { beginAtZero: true, title: { display: false } },
+          },
+        },
       });
-    } catch (err) {
-      console.error("Error fetching latest readings:", err);
     }
+  });
+}
+
+async function fetchHistorical(month) {
+  if (Object.keys(chartMap).length === 0) return;
+  try {
+    const url = month
+      ? `${API_BASE}/data/historical?month=${month}`
+      : `${API_BASE}/data/historical`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+
+    metrics.forEach((m) => {
+      const chart = chartMap[m.key];
+      if (chart && Array.isArray(rows)) {
+        chart.data.labels = rows.map((r) =>
+          new Date(r.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        );
+        chart.data.datasets[0].data = rows.map((r) => r[m.key]);
+        chart.update();
+      }
+    });
+  } catch (err) {
+    console.error("fetchHistorical error", err);
   }
+}
 
-  // --- Date picker filter ---
-  $('#history-date').on('change', function () {
-    const selectedDate = $(this).val();
-    fetchHistoricalData(selectedDate);
-  });
+// -------------------
+// Month selector
+// -------------------
+async function populateMonthSelect() {
+  const sel = document.getElementById("month-select");
+  if (!sel) return;
+  try {
+    const res = await fetch(`${API_BASE}/data/months`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const months = await res.json();
+    sel.innerHTML = months
+      .map((m) => `<option value="${m}">${m}</option>`)
+      .join("");
+    sel.addEventListener("change", () => fetchHistorical(sel.value));
+    if (months.length > 0) fetchHistorical(months[0]);
+  } catch (err) {
+    console.error("month dropdown error", err);
+  }
+}
 
-  // --- Subscription form ---
-  $("#subscribe-form").on("submit", function (e) {
-    e.preventDefault();
-    const email = $("#subscriber-email").val();
-    fetch(`${API_BASE}/subscribe`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "subscribed" || data.status === "exists") {
-          $("#subscribe-message").text("Subscribed successfully!").css("color", "green");
-          $("#subscriber-email").val("");
-        } else {
-          $("#subscribe-message").text("Failed: " + (data.detail || "Unknown error")).css("color", "red");
-        }
-      })
-      .catch(err => {
-        $("#subscribe-message").text("Error: " + err).css("color", "red");
-      });
-  });
+// -------------------
+// Initialize
+// -------------------
+document.addEventListener("DOMContentLoaded", () => {
+  initCirculars();
+  fetchLatest();
+  setInterval(fetchLatest, 5000);
 
-  // --- Initial fetch ---
-  fetchHistoricalData();
-  fetchLatestReadings();
-
-  // --- Auto-refresh ---
-  setInterval(fetchHistoricalData, 60000); // every 1 minute
-  setInterval(fetchLatestReadings, 5000);  // every 5 seconds
+  initCharts();
+  populateMonthSelect();
 });
