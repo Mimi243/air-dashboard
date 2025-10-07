@@ -215,11 +215,7 @@ document.getElementById("subscriber-email-top").innerText = savedEmail;
 document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
 
 // --- Circular progress bars ---
-const tempCircle = new ProgressBar.Circle('#temp-progress', { strokeWidth:6, color:'#FF6384', trailColor:'#eee', trailWidth:6, text:{value:'0°C', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
-const humidityCircle = new ProgressBar.Circle('#humidity-progress', { strokeWidth:6, color:'#36A2EB', trailColor:'#eee', trailWidth:6, text:{value:'0%', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
-const iaqCircle = new ProgressBar.Circle('#iaq-progress', { strokeWidth:6, color:'#4BC0C0', trailColor:'#eee', trailWidth:6, text:{value:'0', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
-const tvocCircle = new ProgressBar.Circle('#tvoc-progress', { strokeWidth:6, color:'#FFCE56', trailColor:'#eee', trailWidth:6, text:{value:'0 ppb', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
-const co2Circle = new ProgressBar.Circle('#co2-progress', { strokeWidth:6, color:'#9966FF', trailColor:'#eee', trailWidth:6, text:{value:'0 ppm', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
+
 
 // --- Live readings fetch & update ---
 async function fetchLiveData() {
