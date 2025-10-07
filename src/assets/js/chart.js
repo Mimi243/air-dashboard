@@ -56,19 +56,58 @@ function initCharts() {
     if (ctx) {
       chartsMapping[metric.key] = new Chart(ctx, {
         type: 'line',
-        data: { labels: [], datasets: [{ label: metric.label, data: [], borderColor: '#36A2EB', tension: 0.3 }] },
+        data: {
+          labels: [], // filled dynamically
+          datasets: [{
+            label: metric.label,
+            data: [], // filled dynamically
+            borderColor: '#36A2EB',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            tension: 0.3,
+            pointRadius: 0 // hide points for readability
+          }]
+        },
         options: {
           responsive: true,
-          plugins: { legend: { display: true } },
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            zoom: {
+              pan: {
+                enabled: true,
+                mode: 'x',
+                modifierKey: 'ctrl' // optional: pan only with ctrl
+              },
+              zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                mode: 'x'
+              }
+            }
+          },
           scales: {
-            x: { title: { display: true, text: 'Time (HH:MM)' } },
-            y: { beginAtZero: true }
+            x: {
+              type: 'time',
+              time: {
+                unit: 'hour',
+                tooltipFormat: 'HH:mm',
+                displayFormats: { hour: 'HH:mm' }
+              },
+              ticks: { source: 'auto' },
+              min: null, // will auto-scale
+              max: null
+            },
+            y: {
+              beginAtZero: true,
+              suggestedMax: metric.maxValue
+            }
           }
         }
       });
     }
   });
 }
+
 
 // Format timestamp to "HH:MM"
 function formatTime(ts) {
@@ -100,35 +139,40 @@ function downsampleData(data, intervalMinutes = 10) {
 }
 
 
-// --- Fetch historical data ---
-async function fetchHistoricalData(month) {
-  if (Object.keys(chartsMapping).length === 0) return;
+// --- FETCH HISTORICAL DATA BY DATE ---
+async function fetchHistoricalData(date) {
+  if (Object.keys(chartsMapping).length === 0 || !date) return;
   try {
-    const url = month ? `${API_BASE}/data/historical?month=${month}` : `${API_BASE}/data/historical`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    let data = await res.json();
+    // Loop through all metrics
+    for (const metric of metrics) {
+      const url = `${API_BASE}/data/history?metric=${metric.key}&date=${date}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
 
-    // If we are on index page, only show last 6 hours
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-      data = filterLast6Hours(data);
-    }
+      // Convert labels to Date objects
+      let data = json.labels.map((ts, i) => ({
+        timestamp: new Date(ts),
+        value: json.values[i]
+      }));
 
-    metrics.forEach(metric => {
+      // Downsample for readability
+      data = downsampleData(data, 5); // 5 minutes interval
+
       const chart = chartsMapping[metric.key];
       if (chart) {
-        chart.data.labels = data.map(d => formatTime(d.timestamp));
-        chart.data.datasets[0].data = data.map(d => d[metric.key]);
+        chart.data.labels = data.map(d => d.timestamp);
+        chart.data.datasets[0].data = data.map(d => d.value);
         chart.update();
       }
-    });
+    }
   } catch (err) {
     console.error('Error fetching historical data:', err);
   }
 }
 
 // --- MONTH DROPDOWN ---
-async function populateMonthDropdown() {
+/*async function populateMonthDropdown() {
   const select = document.getElementById('month-select');
   if (!select) return;
   try {
@@ -141,6 +185,22 @@ async function populateMonthDropdown() {
   } catch (err) {
     console.error('Error fetching months:', err);
   }
+}*/
+
+// --- DATE PICKER ---
+function initDatePicker() {
+  const input = document.getElementById('day-select');
+  if (!input) return;
+
+  // Default to today
+  const today = new Date().toISOString().split('T')[0];
+  input.value = today;
+  fetchHistoricalData(today);
+
+  // Update chart when date changes
+  input.addEventListener('change', () => {
+    fetchHistoricalData(input.value);
+  });
 }
 
 // --- INITIALIZATION ---
@@ -150,5 +210,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(fetchLatestReadings, 5000);
 
   initCharts();
-  populateMonthDropdown();
+  initDatePicker();
 });

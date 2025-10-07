@@ -81,12 +81,12 @@
                 </nav>
               </div>
 
-              <!-- Month filter -->
+              <!-- Date filter -->
               <div class="form-group">
-                <label for="month-select" class="form-label">Select Month</label>
-                <select id="month-select" class="form-select form-select-sm"></select>
+                <label for="day-select" class="form-label">Select Date</label>
+                <input type="date" id="day-select" class="form-control form-control-sm" />
               </div>
-            </div>
+
 
             <!-- Circular progress indicators -->
 
@@ -173,6 +173,7 @@
 <script src="assets/js/todolist.js"></script>
 <script src="assets/js/jquery.cookie.js"></script>
 <script src="assets/js/dashboard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
     <!-- Custom JS -->
     <script src="assets/js/chart.js"></script>
@@ -186,10 +187,10 @@
 </script>
     
 
-<script>
+<!-- <script>
   const API_URL = "https://air-api-9qw4.onrender.com";
 
-  async function fetchHistory(metric = "temperature", date = null) {
+  /*async function fetchHistory(metric = "temperature", date = null) {
     try {
       const url = new URL(`${API_URL}/data/history`);
       url.searchParams.set("metric", metric);
@@ -204,7 +205,7 @@
       console.error("Error fetching historical data:", err);
       return { labels: [], values: [] };
     }
-  }
+  }*/
 
   async function renderTemperatureChart() {
     const ctx = document.getElementById("temperatureChart").getContext("2d");
@@ -233,8 +234,8 @@
   }
 
   // Call the function to render chart when page loads
-  renderTemperatureChart();
-</script>
+  // renderTemperatureChart();
+</script>-->
 
 
 
