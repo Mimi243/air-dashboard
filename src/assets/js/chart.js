@@ -150,10 +150,10 @@ async function fetchHistoricalData(date) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      // Convert labels to Date objects
+      // Convert labels and values to objects suitable for Chart.js
       let data = json.labels.map((ts, i) => ({
-        timestamp: new Date(ts),
-        value: json.values[i]
+        x: new Date(ts),
+        y: json.values[i]
       }));
 
       // Downsample for readability
@@ -161,8 +161,7 @@ async function fetchHistoricalData(date) {
 
       const chart = chartsMapping[metric.key];
       if (chart) {
-        chart.data.labels = data.map(d => d.timestamp);
-        chart.data.datasets[0].data = data.map(d => d.value);
+        chart.data.datasets[0].data = data;
         chart.update();
       }
     }
