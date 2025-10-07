@@ -1,161 +1,139 @@
-// -------------------------------
-// Air Dashboard Chart + Live Data
-// -------------------------------
+const API_BASE = 'https://your-render-api-url.com'; // <-- Replace with your API
 
-const API_BASE = "https://air-api-9qw4.onrender.com"; // your Render API
-
-// Define the metrics we track
 const metrics = [
-  { key: "temperature", label: "Temperature (°C)", color: "#ff6384", max: 50 },
-  { key: "humidity", label: "Humidity (%)", color: "#36a2eb", max: 100 },
-  { key: "iaq", label: "IAQ", color: "#4bc0c0", max: 500 },
-  { key: "voc", label: "TVOC (ppb)", color: "#9966ff", max: 1000 },
-  { key: "co2", label: "eCO₂ (ppm)", color: "#ff9f40", max: 2000 },
+  { key: 'temperature', label: 'Temperature', maxValue: 50, unit: '°C' },
+  { key: 'humidity', label: 'Humidity', maxValue: 100, unit: '%' },
+  { key: 'iaq', label: 'IAQ', maxValue: 500, unit: '' },
+  { key: 'voc', label: 'TVOC', maxValue: 1000, unit: 'ppb' },
+  { key: 'co2', label: 'eCO₂', maxValue: 2000, unit: 'ppm' }
 ];
 
-let chartMap = {};
-let circularMap = {};
+let circularMapping = {};
+let chartsMapping = {};
 
-// -------------------
-// Circular indicators
-// -------------------
-function initCirculars() {
-  metrics.forEach((m) => {
-    const el = document.getElementById(`${m.key}-progress`);
-    if (el) {
-      circularMap[m.key] = new ProgressBar.Circle(`#${m.key}-progress`, {
+// --- CIRCULAR PROGRESS BARS (Dashboard) ---
+function initCircularBars() {
+  metrics.forEach(metric => {
+    const elId = `${metric.key}-progress`;
+    if (document.getElementById(elId)) {
+      circularMapping[metric.key] = new ProgressBar.Circle(`#${elId}`, {
         strokeWidth: 6,
-        color: m.color,
-        trailColor: "#eee",
+        color: '#36A2EB',
+        trailColor: '#eee',
         trailWidth: 6,
-        text: { value: "0", style: { color: "#333", fontSize: "16px" } },
-        svgStyle: { width: "80px", height: "80px" },
+        text: { value: '0', style: { color: '#333', fontSize: '18px' } },
+        svgStyle: { width: '80px', height: '80px' }
       });
     }
   });
 }
 
-async function fetchLatest() {
-  if (Object.keys(circularMap).length === 0) return;
+async function fetchLatestReadings() {
+  if (Object.keys(circularMapping).length === 0) return;
   try {
     const res = await fetch(`${API_BASE}/data/latest-single`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const latest = await res.json();
 
-    metrics.forEach((m) => {
-      const val = latest[m.key];
-      const circle = circularMap[m.key];
-      if (circle && val !== null && val !== undefined) {
-        const ratio = Math.min(val / m.max, 1);
+    metrics.forEach(metric => {
+      const circle = circularMapping[metric.key];
+      if (circle && latest[metric.key] !== null) {
+        const ratio = Math.min(latest[metric.key] / metric.maxValue, 1);
         circle.set(ratio);
-        let unit =
-          m.key === "temperature"
-            ? "°C"
-            : m.key === "humidity"
-            ? "%"
-            : m.key === "voc"
-            ? " ppb"
-            : m.key === "co2"
-            ? " ppm"
-            : "";
-        circle.setText(`${val}${unit}`);
+        circle.setText(`${latest[metric.key]}${metric.unit}`);
       }
     });
   } catch (err) {
-    console.error("fetchLatest error", err);
+    console.error('Error fetching latest readings:', err);
   }
 }
 
-// -------------------
-// Line charts (historical)
-// -------------------
+// --- CHARTS ---
 function initCharts() {
-  metrics.forEach((m) => {
-    const canvas = document.getElementById(`${m.key}Chart`);
-    if (canvas) {
-      chartMap[m.key] = new Chart(canvas, {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [
-            {
-              label: m.label,
-              data: [],
-              borderColor: m.color,
-              borderWidth: 2,
-              fill: false,
-              tension: 0.3,
-              pointRadius: 0,
-            },
-          ],
-        },
+  metrics.forEach(metric => {
+    const canvasId = `${metric.key}Chart`;
+    const ctx = document.getElementById(canvasId);
+    if (ctx) {
+      chartsMapping[metric.key] = new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: metric.label, data: [], borderColor: '#36A2EB', tension: 0.3 }] },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
           plugins: { legend: { display: true } },
           scales: {
-            x: { title: { display: false } },
-            y: { beginAtZero: true, title: { display: false } },
-          },
-        },
+            x: { title: { display: true, text: 'Time (HH:MM)' } },
+            y: { beginAtZero: true }
+          }
+        }
       });
     }
   });
 }
 
-async function fetchHistorical(month) {
-  if (Object.keys(chartMap).length === 0) return;
+// Format timestamp to "HH:MM"
+function formatTime(ts) {
+  const d = new Date(ts);
+  const h = d.getHours().toString().padStart(2, '0');
+  const m = d.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+// Filter data for last 6 hours
+function filterLast6Hours(data) {
+  const now = new Date();
+  const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+  return data.filter(d => new Date(d.timestamp) >= sixHoursAgo);
+}
+
+// --- Fetch historical data ---
+async function fetchHistoricalData(month) {
+  if (Object.keys(chartsMapping).length === 0) return;
   try {
-    const url = month
-      ? `${API_BASE}/data/historical?month=${month}`
-      : `${API_BASE}/data/historical`;
+    const url = month ? `${API_BASE}/data/historical?month=${month}` : `${API_BASE}/data/historical`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rows = await res.json();
+    let data = await res.json();
 
-    metrics.forEach((m) => {
-      const chart = chartMap[m.key];
-      if (chart && Array.isArray(rows)) {
-        chart.data.labels = rows.map((r) =>
-          new Date(r.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        );
-        chart.data.datasets[0].data = rows.map((r) => r[m.key]);
+    // If we are on index page, only show last 6 hours
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+      data = filterLast6Hours(data);
+    }
+
+    metrics.forEach(metric => {
+      const chart = chartsMapping[metric.key];
+      if (chart) {
+        chart.data.labels = data.map(d => formatTime(d.timestamp));
+        chart.data.datasets[0].data = data.map(d => d[metric.key]);
         chart.update();
       }
     });
   } catch (err) {
-    console.error("fetchHistorical error", err);
+    console.error('Error fetching historical data:', err);
   }
 }
 
-// -------------------
-// Month selector
-// -------------------
-async function populateMonthSelect() {
-  const sel = document.getElementById("month-select");
-  if (!sel) return;
+// --- MONTH DROPDOWN ---
+async function populateMonthDropdown() {
+  const select = document.getElementById('month-select');
+  if (!select) return;
   try {
     const res = await fetch(`${API_BASE}/data/months`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const months = await res.json();
-    sel.innerHTML = months
-      .map((m) => `<option value="${m}">${m}</option>`)
-      .join("");
-    sel.addEventListener("change", () => fetchHistorical(sel.value));
-    if (months.length > 0) fetchHistorical(months[0]);
+    select.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    select.addEventListener('change', () => fetchHistoricalData(select.value));
+    if (months.length > 0) fetchHistoricalData(months[0]);
   } catch (err) {
-    console.error("month dropdown error", err);
+    console.error('Error fetching months:', err);
   }
 }
 
-// -------------------
-// Initialize
-// -------------------
-document.addEventListener("DOMContentLoaded", () => {
-  initCirculars();
-  fetchLatest();
-  setInterval(fetchLatest, 5000);
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+  initCircularBars();
+  fetchLatestReadings();
+  setInterval(fetchLatestReadings, 5000);
 
   initCharts();
-  populateMonthSelect();
+  populateMonthDropdown();
 });
