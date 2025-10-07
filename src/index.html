@@ -201,57 +201,109 @@
 <script src="js/charts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
 
+<!-- Removed duplicate circular progress bar and live data script to fix redeclaration error -->
+
+<!-- Removed duplicate savedEmail declaration to fix redeclaration error -->
+
+
 <script>
 const API_URL = "https://air-api-9qw4.onrender.com";
 
-// Circular progress bars
+// --- Subscriber email ---
+const savedEmail = localStorage.getItem("subscriberEmail") || "subscriber@example.com";
+document.getElementById("subscriber-email-top").innerText = savedEmail;
+document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
+
+// --- Circular progress bars ---
 const tempCircle = new ProgressBar.Circle('#temp-progress', { strokeWidth:6, color:'#FF6384', trailColor:'#eee', trailWidth:6, text:{value:'0°C', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
 const humidityCircle = new ProgressBar.Circle('#humidity-progress', { strokeWidth:6, color:'#36A2EB', trailColor:'#eee', trailWidth:6, text:{value:'0%', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
 const iaqCircle = new ProgressBar.Circle('#iaq-progress', { strokeWidth:6, color:'#4BC0C0', trailColor:'#eee', trailWidth:6, text:{value:'0', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
 const tvocCircle = new ProgressBar.Circle('#tvoc-progress', { strokeWidth:6, color:'#FFCE56', trailColor:'#eee', trailWidth:6, text:{value:'0 ppb', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
 const co2Circle = new ProgressBar.Circle('#co2-progress', { strokeWidth:6, color:'#9966FF', trailColor:'#eee', trailWidth:6, text:{value:'0 ppm', style:{color:'#333', fontSize:'18px'}}, svgStyle:{width:'80px',height:'80px'} });
 
+// --- Live readings fetch & update ---
 async function fetchLiveData() {
   try {
     const res = await fetch(`${API_URL}/data/latest-single`);
     const data = await res.json();
 
-    tempCircle.set(data.temperature / 50); tempCircle.setText(`${data.temperature}°C`);
-    humidityCircle.set(data.humidity / 100); humidityCircle.setText(`${data.humidity}%`);
-    iaqCircle.set(data.iaq / 500); iaqCircle.setText(`${data.iaq}`);
-    tvocCircle.set(data.tvoc / 1000); tvocCircle.setText(`${data.tvoc} ppb`);
-    co2Circle.set(data.eco2 / 2000); co2Circle.setText(`${data.eco2} ppm`);
+    // Update circular progress bars
+    if(data.temperature !== null) { tempCircle.set(data.temperature/50); tempCircle.setText(`${data.temperature}°C`); }
+    if(data.humidity !== null) { humidityCircle.set(data.humidity/100); humidityCircle.setText(`${data.humidity}%`); }
+    if(data.iaq !== null) { iaqCircle.set(data.iaq/500); iaqCircle.setText(`${data.iaq}`); }
+    if(data.tvoc !== null) { tvocCircle.set(data.tvoc/1000); tvocCircle.setText(`${data.tvoc} ppb`); }
+    if(data.eco2 !== null) { co2Circle.set(data.eco2/2000); co2Circle.setText(`${data.eco2} ppm`); }
 
-    // Alert logic
+    // Update alert card
     const alertCard = document.getElementById('alert-card');
     const alertText = document.getElementById('alert-text');
-    if(data.temperature>35 || data.humidity>80 || data.iaq>150 || data.tvoc>600 || data.eco2>1500){
-      alertCard.classList.remove('bg-gradient-primary'); 
-      alertCard.classList.add('bg-gradient-danger');
-      alertText.innerText = "Threshold Exceeded!";
-    } else {
-      alertCard.classList.remove('bg-gradient-danger'); 
-      alertCard.classList.add('bg-gradient-primary');
-      alertText.innerText = "All Good";
-    }
+    let alertMessage = "All Good";
+    let alertClass = "bg-gradient-primary";
 
-  } catch(err){ console.error("Error fetching live data:",err); }
+    if(data.temperature < 18 || data.temperature > 26) { alertMessage="Temperature Alert!"; alertClass="bg-gradient-danger"; }
+    else if(data.humidity < 30 || data.humidity > 60) { alertMessage="Humidity Alert!"; alertClass="bg-gradient-danger"; }
+    else if(data.voc > 500) { alertMessage="VOC Alert!"; alertClass="bg-gradient-danger"; }
+    else if(data.eco2 > 1000) { alertMessage="CO2 Alert!"; alertClass="bg-gradient-danger"; }
+
+    alertCard.classList.remove("bg-gradient-primary","bg-gradient-danger");
+    alertCard.classList.add(alertClass);
+    alertText.innerText = alertMessage;
+
+  } catch(err){
+    console.error("Error fetching live data:",err);
+  }
 }
-setInterval(fetchLiveData, 5000);
+
+// --- Historical data for charts ---
+async function fetchHistoricalData(metric) {
+  try {
+    const res = await fetch(`${API_URL}/data/history?metric=${metric}`);
+    if(!res.ok) throw new Error("Failed to fetch history");
+    const data = await res.json(); // { labels: [...], values: [...] }
+    return data;
+  } catch(err){
+    console.error(`Error fetching ${metric} history:`, err);
+    return {labels:[], values:[]};
+  }
+}
+
+// --- Initialize charts ---
+async function initCharts() {
+  const tempData = await fetchHistoricalData("temperature");
+  const humData = await fetchHistoricalData("humidity");
+  const vocData = await fetchHistoricalData("voc");
+  const co2Data = await fetchHistoricalData("co2");
+  const iaqData = await fetchHistoricalData("iaq");
+
+  const chartOptions = {
+    type: 'line',
+    options: { responsive: true, plugins: { legend: { display: true } } }
+  };
+
+  const tempChartEl = document.getElementById('temp-chart').getContext('2d');
+  new Chart(tempChartEl, {...chartOptions, data:{labels:tempData.labels, datasets:[{label:'Temperature (°C)', data:tempData.values, borderColor:'#FF6384', fill:false}]}});
+
+  const humChartEl = document.getElementById('humidity-chart').getContext('2d');
+  new Chart(humChartEl, {...chartOptions, data:{labels:humData.labels, datasets:[{label:'Humidity (%)', data:humData.values, borderColor:'#36A2EB', fill:false}]}});
+
+  const vocChartEl = document.getElementById('voc-chart').getContext('2d');
+  new Chart(vocChartEl, {...chartOptions, data:{labels:vocData.labels, datasets:[{label:'VOC (ppb)', data:vocData.values, borderColor:'#FFCE56', fill:false}]}});
+
+  const co2ChartEl = document.getElementById('co2-chart').getContext('2d');
+  new Chart(co2ChartEl, {...chartOptions, data:{labels:co2Data.labels, datasets:[{label:'CO2 (ppm)', data:co2Data.values, borderColor:'#9966FF', fill:false}]}});
+
+  const iaqChartEl = document.getElementById('iaq-chart').getContext('2d');
+  new Chart(iaqChartEl, {...chartOptions, data:{labels:iaqData.labels, datasets:[{label:'IAQ', data:iaqData.values, borderColor:'#4BC0C0', fill:false}]}});
+
+}
+
+// --- Start everything ---
 fetchLiveData();
-
-// Display subscriber email
-const subscriberEmail = "subscriber@example.com"; 
-document.getElementById("subscriber-email-top").innerText = subscriberEmail;
-document.getElementById("subscriber-email-sidebar").innerText = subscriberEmail;
+setInterval(fetchLiveData, 5000); // live readings every 5 sec
+initCharts(); // historical charts once on page load
 </script>
 
-<script>
-  // Display subscriber email from localStorage
-  const savedEmail = localStorage.getItem("subscriberEmail") || "subscriber@example.com";
-  document.getElementById("subscriber-email-top").innerText = savedEmail;
-  document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
-</script>
+
 
 
 </body>
