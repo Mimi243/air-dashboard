@@ -72,62 +72,90 @@
         <h3 class="mb-4">Live Readings</h3>
 
         <!-- Circular Progress Bars -->
-    <div class="row mb-3">
-      <div class="col-md-4 stretch-card grid-margin">
-        <div class="card text-center">
+
+    <div class="container mt-4">
+  <!-- ALERT ROW -->
+    <div class="row mb-4 justify-content-center">
+      <div class="col-md-6">
+        <div class="card text-center bg-gradient-primary text-white shadow-sm" id="alert-card">
           <div class="card-body">
-            <h5>Temperature</h5>
-            <div id="temperature-progress"></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 stretch-card grid-margin">
-        <div class="card text-center">
-          <div class="card-body">
-            <h5>Humidity</h5>
-            <div id="humidity-progress"></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4 stretch-card grid-margin">
-        <div class="card text-center">
-          <div class="card-body">
-            <h5>TVOC</h5>
-            <div id="voc-progress"></div>
+            <h4 class="card-title mb-2">ALERT</h4>
+            <h2 id="alert-text">All Good</h2>
           </div>
         </div>
       </div>
     </div>
 
-        <div class="row mb-4">
-          <div class="col-md-5 stretch-card grid-margin">
-            <div class="card text-center">
-              <div class="card-body">
-                <h5>CO₂</h5>
-                <div id="co2-progress"></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-5 stretch-card grid-margin">
-            <div class="card text-center">
-              <div class="card-body">
-                <h5>IAQ</h5>
-                <div id="iaq-progress"></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-2 stretch-card grid-margin">
-            <div class="card text-center bg-gradient-primary text-white" id="alert-card">
-              <div class="card-body">
-                <h4 class="card-title">ALERT</h4>
-                <h2 id="alert-text">All Good</h2>
-              </div>
-            </div>
-          </div>
+
+  <div class="row mb-4">
+    <div class="col-md-6 stretch-card grid-margin">
+      <div class="card text-center shadow-sm">
+        <div class="card-body">
+          <h5>Temperature</h5>
+          <div id="temperature-progress"></div>
         </div>
+      </div>
+    </div>
+    <div class="col-md-6 stretch-card grid-margin">
+      <div class="card text-center shadow-sm">
+        <div class="card-body">
+          <h5>Humidity</h5>
+          <div id="humidity-progress"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- SECOND ROW (TVOC + CO₂) -->
+  <div class="row mb-4">
+    <div class="col-md-6 stretch-card grid-margin">
+      <div class="card text-center shadow-sm">
+        <div class="card-body">
+          <h5>TVOC</h5>
+          <div id="voc-progress"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 stretch-card grid-margin">
+      <div class="card text-center shadow-sm">
+        <div class="card-body">
+          <h5>CO₂</h5>
+          <div id="co2-progress"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THIRD ROW (IAQ only) -->
+  <div class="row mb-5 justify-content-center">
+    <div class="col-md-6 stretch-card grid-margin">
+      <div class="card text-center shadow-sm">
+        <div class="card-body">
+          <h5>IAQ</h5>
+          <div id="iaq-progress"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- BUTTON ROW -->
+    <div class="row justify-content-center mb-5">
+      <div class="col-md-6 d-flex justify-content-around">
+        <a href="charts.html" id="btn-history"
+          class="btn btn-outline-primary btn-lg px-4 d-flex align-items-center gap-2 shadow-sm">
+          <i class="bi bi-graph-up"></i>
+          <span>View Historical Data</span>
+        </a>
+        <a href="subscriber.html" id="btn-subscribe"
+          class="btn btn-primary btn-lg px-4 d-flex align-items-center gap-2 shadow-sm">
+          <i class="bi bi-bell"></i>
+          <span>Subscribe for Alerts</span>
+        </a>
+      </div>
+    </div>
 
         <!-- Historical Charts -->
-        <div class="row mb-4">
+         <!-- <div class="row mb-4"> 
           <div class="col-lg-6 grid-margin stretch-card">
             <div class="card">
               <div class="card-body">
@@ -180,7 +208,7 @@
             <a href="subscriber.html" class="btn btn-primary mt-3">Subscribe</a>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Footer -->
       <footer class="footer">
