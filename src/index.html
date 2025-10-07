@@ -256,11 +256,11 @@ async function fetchLiveData() {
     const data = await res.json();
 
     // --- Convert readings to numbers ---
-    const temp = Number(data.temperature);
-    const hum  = Number(data.humidity);
-    const voc  = Number(data.voc);
-    const co2  = Number(data.co2);
-    const iaq  = Number(data.iaq);
+    const temp = Number(temperature);
+    const hum  = Number(humidity);
+    const voc  = Number(voc);
+    const co2  = Number(co2);
+    const iaq  = Number(iaq);
 
     // --- Update circular progress bars ---
     if (!isNaN(temp)) tempCircle.set(temp/50); tempCircle.setText(`${temp}°C`);
