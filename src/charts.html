@@ -33,17 +33,22 @@
         <nav class="sidebar sidebar-offcanvas" id="sidebar">
           <ul class="nav">
             <li class="nav-item">
-              <a class="nav-link" href="../../index.html">
+              <a class="nav-link" href="index.html">
                 <span class="menu-title">Dashboard</span>
                 <i class="mdi mdi-home menu-icon"></i>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="../../pages/charts/chartjs.html">
+              <a class="nav-link" href="charts.html">
                 <span class="menu-title">Charts</span>
                 <i class="mdi mdi-chart-line menu-icon"></i>
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="subscriber.html">
+                <span class="menu-title">Subscribe</span>
+                <i class="mdi mdi-table-large menu-icon"></i>
+              </a>
           </ul>
         </nav>
 
@@ -70,48 +75,6 @@
             </div>
 
             <!-- Circular progress indicators -->
-            <div class="row mb-4">
-              <div class="col-md-2 col-sm-4 grid-margin stretch-card">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5>Temperature</h5>
-                    <div id="temperature-progress" class="d-flex justify-content-center"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-2 col-sm-4 grid-margin stretch-card">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5>Humidity</h5>
-                    <div id="humidity-progress" class="d-flex justify-content-center"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-2 col-sm-4 grid-margin stretch-card">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5>IAQ</h5>
-                    <div id="iaq-progress" class="d-flex justify-content-center"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-2 col-sm-4 grid-margin stretch-card">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5>TVOC</h5>
-                    <div id="voc-progress" class="d-flex justify-content-center"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-2 col-sm-4 grid-margin stretch-card">
-                <div class="card text-center">
-                  <div class="card-body">
-                    <h5>CO₂</h5>
-                    <div id="co2-progress" class="d-flex justify-content-center"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <!-- Line Charts -->
             <div class="row">
@@ -119,7 +82,7 @@
                 <div class="card">
                   <div class="card-body">
                     <h4 class="card-title">Temperature</h4>
-                    <div style="height: 300px;">
+                    <div class="chart-container">
                       <canvas id="temperatureChart"></canvas>
                     </div>
                   </div>
@@ -130,7 +93,7 @@
                 <div class="card">
                   <div class="card-body">
                     <h4 class="card-title">Humidity</h4>
-                    <div style="height: 300px;">
+                    <div class="chart-container">
                       <canvas id="humidityChart"></canvas>
                     </div>
                   </div>
@@ -141,7 +104,7 @@
                 <div class="card">
                   <div class="card-body">
                     <h4 class="card-title">IAQ</h4>
-                    <div style="height: 300px;">
+                    <div class="chart-container">
                       <canvas id="iaqChart"></canvas>
                     </div>
                   </div>
@@ -152,7 +115,7 @@
                 <div class="card">
                   <div class="card-body">
                     <h4 class="card-title">TVOC</h4>
-                    <div style="height: 300px;">
+                    <div class="chart-container">
                       <canvas id="vocChart"></canvas>
                     </div>
                   </div>
@@ -163,7 +126,7 @@
                 <div class="card">
                   <div class="card-body">
                     <h4 class="card-title">CO₂</h4>
-                    <div style="height: 300px;">
+                    <div class="chart-container">
                       <canvas id="co2Chart"></canvas>
                     </div>
                   </div>
