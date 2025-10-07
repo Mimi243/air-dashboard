@@ -247,28 +247,12 @@ document.getElementById("subscriber-email-sidebar").innerText = subscriberEmail;
 </script>
 
 <script>
-  // Use the already declared API_URL from the previous script block
-
-  async function loadSubscriberEmail() {
-    try {
-      const res = await fetch(`${API_URL}/subscribers/latest`);
-      if (res.ok) {
-        const data = await res.json();
-        const email = data.email || "subscriber@example.com";
-        const topEl = document.getElementById("subscriber-email-top");
-        const sidebarEl = document.getElementById("subscriber-email-sidebar");
-        if (topEl) topEl.innerText = email;
-        if (sidebarEl) sidebarEl.innerText = email;
-      } else {
-        console.error("Failed to fetch latest subscriber.");
-      }
-    } catch (err) {
-      console.error("Error fetching subscriber:", err);
-    }
-  }
-
-  loadSubscriberEmail();
+  // Display subscriber email from localStorage
+  const savedEmail = localStorage.getItem("subscriberEmail") || "subscriber@example.com";
+  document.getElementById("subscriber-email-top").innerText = savedEmail;
+  document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
 </script>
+
 
 </body>
 </html>
