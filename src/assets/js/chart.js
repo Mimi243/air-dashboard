@@ -85,6 +85,21 @@ function filterLast6Hours(data) {
   return data.filter(d => new Date(d.timestamp) >= sixHoursAgo);
 }
 
+// --- DOWNSAMPLE DATA (e.g., every 10 minutes) ---
+function downsampleData(data, intervalMinutes = 10) {
+  const result = [];
+  let lastTime = 0;
+  data.forEach(d => {
+    const t = new Date(d.timestamp).getTime();
+    if (t - lastTime >= intervalMinutes * 60 * 1000) {
+      result.push(d);
+      lastTime = t;
+    }
+  });
+  return result;
+}
+
+
 // --- Fetch historical data ---
 async function fetchHistoricalData(month) {
   if (Object.keys(chartsMapping).length === 0) return;
