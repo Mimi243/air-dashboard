@@ -12,7 +12,7 @@ const metrics = [
 let circularMapping = {};
 let chartsMapping = {};
 
-// --- CIRCULAR PROGRESS BARS (no changes needed if not present in HTML) ---
+// --- CIRCULAR PROGRESS BARS (unchanged) ---
 function initCircularBars() {
   metrics.forEach(metric => {
     const elId = `${metric.key}-progress`;
@@ -48,14 +48,14 @@ async function fetchLatestReadings() {
   }
 }
 
-// --- CHARTS INITIALIZATION ---
+// --- CHARTS INITIALIZATION (CATEGORY X-AXIS for simplicity) ---
 function initCharts() {
   metrics.forEach(metric => {
     const canvasId = `${metric.key}Chart`;
     const canvasEl = document.getElementById(canvasId);
     if (!canvasEl) return;
 
-    // give container a height so chart draws
+    // ensure container has height
     const container = canvasEl.closest('.chart-container');
     if (container && !container.style.height) container.style.height = '300px';
 
@@ -63,9 +63,10 @@ function initCharts() {
     chartsMapping[metric.key] = new Chart(ctx, {
       type: 'line',
       data: {
+        labels: [], // category labels (e.g., "09:00")
         datasets: [{
           label: metric.label,
-          data: [], // will hold {x:Date, y:Number}
+          data: [], // numeric values
           borderColor: '#36A2EB',
           backgroundColor: 'rgba(54,162,235,0.15)',
           tension: 0.3,
@@ -78,15 +79,16 @@ function initCharts() {
         plugins: {
           legend: { display: true },
           zoom: {
+            // zoom/pan will work with category axis too (pan moves index)
             pan: { enabled: true, mode: 'x' },
             zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
           }
         },
         scales: {
           x: {
-            type: 'time',
-            time: { unit: 'hour', tooltipFormat: 'HH:mm', displayFormats: { hour: 'HH:mm' } },
-            ticks: { source: 'auto' }
+            type: 'category',
+            title: { display: true, text: 'Time (HH:MM)' },
+            ticks: { autoSkip: true, maxRotation: 0, minRotation: 0 }
           },
           y: {
             beginAtZero: true,
@@ -98,29 +100,33 @@ function initCharts() {
   });
 }
 
-// --- DOWNSAMPLE (works with {x:Date,y:Number} or {timestamp,...}) ---
-function downsampleData(data, intervalMinutes = 10) {
-  const result = [];
-  let lastTime = 0;
-  data.forEach(d => {
-    const raw = d.timestamp ?? d.x ?? null;
-    if (!raw) return;
-    const t = (raw instanceof Date) ? raw.getTime() : new Date(raw).getTime();
-    if (isNaN(t)) return;
-    if (t - lastTime >= intervalMinutes * 60 * 1000) {
-      result.push(d);
-      lastTime = t;
-    }
-  });
-  return result;
+// --- Simple downsampling by taking every Nth item ---
+function downsampleLabelsValues(labels, values, step = 5) {
+  const outLabels = [];
+  const outValues = [];
+  const n = Math.min(labels.length, values.length);
+  if (n === 0) return { labels: outLabels, values: outValues };
+  for (let i = 0; i < n; i += step) {
+    outLabels.push(labels[i]);
+    outValues.push(Number(values[i]));
+  }
+  return { labels: outLabels, values: outValues };
 }
 
-// --- FETCH HISTORICAL DATA BY DATE ---
-// --- FETCH HISTORICAL DATA BY DATE ---
-// Returns number of points loaded for that date (across metrics; 0 means no data)
+// Format ISO timestamp to "HH:MM"
+function formatTimeLabel(ts) {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return String(ts);
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+// --- FETCH HISTORICAL DATA (uses backend labels & values directly) ---
+// returns total points plotted across all metrics
 async function fetchHistoricalData(date) {
   if (Object.keys(chartsMapping).length === 0 || !date) return 0;
-  let totalPoints = 0;
+  let totalPlotted = 0;
   try {
     for (const metric of metrics) {
       const url = `${API_BASE}/data/history?metric=${metric.key}&date=${date}`;
@@ -130,37 +136,44 @@ async function fetchHistoricalData(date) {
         continue;
       }
       const json = await res.json();
+      const rawLabels = Array.isArray(json.labels) ? json.labels : [];
+      const rawValues = Array.isArray(json.values) ? json.values : [];
 
-      // build points as {x: Date, y: Number}
-      let points = (json.labels || []).map((ts, i) => ({
-        x: new Date(ts),
-        y: Number((json.values || [])[i])
-      }));
+      // if no data, clear chart and continue
+      if (rawLabels.length === 0 || rawValues.length === 0) {
+        const chartEmpty = chartsMapping[metric.key];
+        if (chartEmpty) {
+          chartEmpty.data.labels = [];
+          chartEmpty.data.datasets[0].data = [];
+          chartEmpty.update();
+        }
+        continue;
+      }
 
-      // filter invalid
-      points = points.filter(p => p.x instanceof Date && !isNaN(p.x.getTime()) && typeof p.y === 'number' && !isNaN(p.y));
+      // downsample by step (default every 5th sample; adjust if you want denser/sparser)
+      const { labels: dsLabelsRaw, values: dsValues } = downsampleLabelsValues(rawLabels, rawValues, 5);
 
-      // downsample
-      points = downsampleData(points, 5);
+      // format labels to HH:MM for readability
+      const dsLabels = dsLabelsRaw.map(formatTimeLabel);
 
+      // set chart data
       const chart = chartsMapping[metric.key];
       if (chart) {
-        chart.data.datasets[0].data = points;
+        chart.data.labels = dsLabels;
+        chart.data.datasets[0].data = dsValues;
         chart.update();
       }
 
-      totalPoints += points.length;
+      totalPlotted += dsValues.length;
     }
   } catch (err) {
     console.error('Error fetching historical data:', err);
   }
-  return totalPoints;
+  return totalPlotted;
 }
 
-// --- DATE PICKER with fallback to most recent available date ---
-// If today's date has no data, will query the backend (no-date endpoint)
-// to find the most recent timestamp and set the date picker to that day.
-async function initDatePicker() {
+// --- DATE PICKER (simple) ---
+function initDatePicker() {
   const input = document.getElementById('day-select');
   if (!input) return;
 
@@ -168,52 +181,20 @@ async function initDatePicker() {
   const today = new Date().toISOString().split('T')[0];
   input.value = today;
 
-  // try to load today's data first
-  let points = await fetchHistoricalData(today);
+  // initial load
+  fetchHistoricalData(today);
 
-  // if no points, try to find latest available date from backend
-  if (!points) {
-    try {
-      // Ask backend for recent rows without date filter (it returns latest 200 rows)
-      // We'll try one metric (temperature) to find the most recent timestamp available.
-      const fallbackRes = await fetch(`${API_BASE}/data/history?metric=temperature`);
-      if (fallbackRes.ok) {
-        const json = await fallbackRes.json();
-        const labels = json.labels || [];
-        if (labels.length > 0) {
-          // Take the last timestamp available and set date picker to that day
-          const lastTs = new Date(labels[labels.length - 1]);
-          if (!isNaN(lastTs.getTime())) {
-            const yyyy = lastTs.getFullYear();
-            const mm = String(lastTs.getMonth() + 1).padStart(2, '0');
-            const dd = String(lastTs.getDate()).padStart(2, '0');
-            const latestDate = `${yyyy}-${mm}-${dd}`;
-            input.value = latestDate;
-            // load charts for that date
-            await fetchHistoricalData(latestDate);
-            return; // done
-          }
-        }
-      } else {
-        console.warn('Fallback history fetch failed', fallbackRes.status);
-      }
-    } catch (err) {
-      console.error('Fallback to latest date failed:', err);
-    }
-  }
-
-  // wire change handler (user picks another date)
-  input.addEventListener('change', async () => {
-    await fetchHistoricalData(input.value);
+  // change handler
+  input.addEventListener('change', () => {
+    fetchHistoricalData(input.value);
   });
 }
-
 
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
   initCircularBars();
-  initCharts();       // create chart instances
-  initDatePicker();   // fetches data for default date
+  initCharts();
+  initDatePicker();
   fetchLatestReadings();
   setInterval(fetchLatestReadings, 5000);
 });
