@@ -130,10 +130,10 @@ function downsampleData(data, intervalMinutes = 10) {
   let lastTime = 0;
 
   data.forEach(d => {
-    // support both shapes: { timestamp: "..."} or { x: Date | ISOstring }
+    // support both shapes: { timestamp: ... } or { x: Date|isoString }
     const raw = d.timestamp ?? d.x ?? null;
     if (!raw) return;
-    const t = new Date(raw).getTime();
+    const t = (raw instanceof Date) ? raw.getTime() : new Date(raw).getTime();
     if (isNaN(t)) return;
 
     if (t - lastTime >= intervalMinutes * 60 * 1000) {
@@ -150,25 +150,31 @@ function downsampleData(data, intervalMinutes = 10) {
 async function fetchHistoricalData(date) {
   if (Object.keys(chartsMapping).length === 0 || !date) return;
   try {
-    // Loop through all metrics
     for (const metric of metrics) {
       const url = `${API_BASE}/data/history?metric=${metric.key}&date=${date}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      // Convert labels and values to objects suitable for Chart.js
-      let data = json.labels.map((ts, i) => ({
+      // sanity check
+      console.log(metric.key, 'labels', (json.labels || []).length, 'values', (json.values || []).length);
+
+      // Convert labels and values to objects suitable for Chart.js (x: Date, y: Number)
+      let data = (json.labels || []).map((ts, i) => ({
         x: new Date(ts),
-        y: json.values[i]
+        y: Number(json.values[i])
       }));
 
-      // Downsample for readability
+      console.log(metric.key, 'points before downsample', data.length);
+
+      // Downsample for readability (supports .x)
       data = downsampleData(data, 5); // 5 minutes interval
+
+      console.log(metric.key, 'points after downsample', data.length);
 
       const chart = chartsMapping[metric.key];
       if (chart) {
-        chart.data.datasets[0].data = data;
+        chart.data.datasets[0].data = data; // array of {x: Date, y: Number}
         chart.update();
       }
     }
