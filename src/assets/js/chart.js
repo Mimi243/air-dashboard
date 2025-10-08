@@ -128,13 +128,20 @@ function filterLast6Hours(data) {
 function downsampleData(data, intervalMinutes = 10) {
   const result = [];
   let lastTime = 0;
+
   data.forEach(d => {
-    const t = new Date(d.timestamp).getTime();
+    // support both shapes: { timestamp: "..."} or { x: Date | ISOstring }
+    const raw = d.timestamp ?? d.x ?? null;
+    if (!raw) return;
+    const t = new Date(raw).getTime();
+    if (isNaN(t)) return;
+
     if (t - lastTime >= intervalMinutes * 60 * 1000) {
       result.push(d);
       lastTime = t;
     }
   });
+
   return result;
 }
 
@@ -205,9 +212,9 @@ function initDatePicker() {
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
   initCircularBars();
-  fetchLatestReadings();
-  setInterval(fetchLatestReadings, 5000);
-
   initCharts();
   initDatePicker();
+  fetchLatestReadings();
+  setInterval(fetchLatestReadings, 5000);
+  
 });
