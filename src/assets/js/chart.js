@@ -1,4 +1,5 @@
-const API_BASE = 'https://air-api-9qw4.onrender.com'; // <-- Replace with your API
+// assets/js/chart.js
+const API_BASE = 'https://air-api-9qw4.onrender.com';
 
 const metrics = [
   { key: 'temperature', label: 'Temperature', maxValue: 50, unit: '°C' },
@@ -11,7 +12,7 @@ const metrics = [
 let circularMapping = {};
 let chartsMapping = {};
 
-// --- CIRCULAR PROGRESS BARS (Dashboard) ---
+// --- CIRCULAR PROGRESS BARS (no changes needed if not present in HTML) ---
 function initCircularBars() {
   metrics.forEach(metric => {
     const elId = `${metric.key}-progress`;
@@ -34,11 +35,10 @@ async function fetchLatestReadings() {
     const res = await fetch(`${API_BASE}/data/latest-single`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const latest = await res.json();
-
     metrics.forEach(metric => {
       const circle = circularMapping[metric.key];
-      if (circle && latest[metric.key] !== null) {
-        const ratio = Math.min(latest[metric.key] / metric.maxValue, 1);
+      if (circle && latest[metric.key] !== null && latest[metric.key] !== undefined) {
+        const ratio = Math.min(Number(latest[metric.key]) / metric.maxValue, 1);
         circle.set(ratio);
         circle.setText(`${latest[metric.key]}${metric.unit}`);
       }
@@ -48,179 +48,172 @@ async function fetchLatestReadings() {
   }
 }
 
-// --- CHARTS ---
+// --- CHARTS INITIALIZATION ---
 function initCharts() {
   metrics.forEach(metric => {
     const canvasId = `${metric.key}Chart`;
-    const ctx = document.getElementById(canvasId);
-    if (ctx) {
-      chartsMapping[metric.key] = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: [], // filled dynamically
-          datasets: [{
-            label: metric.label,
-            data: [], // filled dynamically
-            borderColor: '#36A2EB',
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            tension: 0.3,
-            pointRadius: 0 // hide points for readability
-          }]
+    const canvasEl = document.getElementById(canvasId);
+    if (!canvasEl) return;
+
+    // give container a height so chart draws
+    const container = canvasEl.closest('.chart-container');
+    if (container && !container.style.height) container.style.height = '300px';
+
+    const ctx = canvasEl.getContext('2d');
+    chartsMapping[metric.key] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: metric.label,
+          data: [], // will hold {x:Date, y:Number}
+          borderColor: '#36A2EB',
+          backgroundColor: 'rgba(54,162,235,0.15)',
+          tension: 0.3,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true },
+          zoom: {
+            pan: { enabled: true, mode: 'x' },
+            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+          }
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true },
-            zoom: {
-              pan: {
-                enabled: true,
-                mode: 'x',
-                modifierKey: 'ctrl' // optional: pan only with ctrl
-              },
-              zoom: {
-                wheel: { enabled: true },
-                pinch: { enabled: true },
-                mode: 'x'
-              }
-            }
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'hour', tooltipFormat: 'HH:mm', displayFormats: { hour: 'HH:mm' } },
+            ticks: { source: 'auto' }
           },
-          scales: {
-            x: {
-              type: 'time',
-              time: {
-                unit: 'hour',
-                tooltipFormat: 'HH:mm',
-                displayFormats: { hour: 'HH:mm' }
-              },
-              ticks: { source: 'auto' },
-              min: null, // will auto-scale
-              max: null
-            },
-            y: {
-              beginAtZero: true,
-              suggestedMax: metric.maxValue
-            }
+          y: {
+            beginAtZero: true,
+            suggestedMax: metric.maxValue
           }
         }
-      });
-    }
+      }
+    });
   });
 }
 
-
-// Format timestamp to "HH:MM"
-function formatTime(ts) {
-  const d = new Date(ts);
-  const h = d.getHours().toString().padStart(2, '0');
-  const m = d.getMinutes().toString().padStart(2, '0');
-  return `${h}:${m}`;
-}
-
-// Filter data for last 6 hours
-function filterLast6Hours(data) {
-  const now = new Date();
-  const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
-  return data.filter(d => new Date(d.timestamp) >= sixHoursAgo);
-}
-
-// --- DOWNSAMPLE DATA (e.g., every 10 minutes) ---
+// --- DOWNSAMPLE (works with {x:Date,y:Number} or {timestamp,...}) ---
 function downsampleData(data, intervalMinutes = 10) {
   const result = [];
   let lastTime = 0;
-
   data.forEach(d => {
-    // support both shapes: { timestamp: ... } or { x: Date|isoString }
     const raw = d.timestamp ?? d.x ?? null;
     if (!raw) return;
     const t = (raw instanceof Date) ? raw.getTime() : new Date(raw).getTime();
     if (isNaN(t)) return;
-
     if (t - lastTime >= intervalMinutes * 60 * 1000) {
       result.push(d);
       lastTime = t;
     }
   });
-
   return result;
 }
 
-
 // --- FETCH HISTORICAL DATA BY DATE ---
+// --- FETCH HISTORICAL DATA BY DATE ---
+// Returns number of points loaded for that date (across metrics; 0 means no data)
 async function fetchHistoricalData(date) {
-  if (Object.keys(chartsMapping).length === 0 || !date) return;
+  if (Object.keys(chartsMapping).length === 0 || !date) return 0;
+  let totalPoints = 0;
   try {
     for (const metric of metrics) {
       const url = `${API_BASE}/data/history?metric=${metric.key}&date=${date}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        console.error('history fetch failed', metric.key, res.status);
+        continue;
+      }
       const json = await res.json();
 
-      // sanity check
-      console.log(metric.key, 'labels', (json.labels || []).length, 'values', (json.values || []).length);
-
-      // Convert labels and values to objects suitable for Chart.js (x: Date, y: Number)
-      let data = (json.labels || []).map((ts, i) => ({
+      // build points as {x: Date, y: Number}
+      let points = (json.labels || []).map((ts, i) => ({
         x: new Date(ts),
-        y: Number(json.values[i])
+        y: Number((json.values || [])[i])
       }));
 
-      console.log(metric.key, 'points before downsample', data.length);
+      // filter invalid
+      points = points.filter(p => p.x instanceof Date && !isNaN(p.x.getTime()) && typeof p.y === 'number' && !isNaN(p.y));
 
-      // Downsample for readability (supports .x)
-      data = downsampleData(data, 5); // 5 minutes interval
-
-      console.log(metric.key, 'points after downsample', data.length);
+      // downsample
+      points = downsampleData(points, 5);
 
       const chart = chartsMapping[metric.key];
       if (chart) {
-        chart.data.datasets[0].data = data; // array of {x: Date, y: Number}
+        chart.data.datasets[0].data = points;
         chart.update();
       }
+
+      totalPoints += points.length;
     }
   } catch (err) {
     console.error('Error fetching historical data:', err);
   }
+  return totalPoints;
 }
 
-// --- MONTH DROPDOWN ---
-/*async function populateMonthDropdown() {
-  const select = document.getElementById('month-select');
-  if (!select) return;
-  try {
-    const res = await fetch(`${API_BASE}/data/months`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const months = await res.json();
-    select.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-    select.addEventListener('change', () => fetchHistoricalData(select.value));
-    if (months.length > 0) fetchHistoricalData(months[0]);
-  } catch (err) {
-    console.error('Error fetching months:', err);
-  }
-}*/
-
-// --- DATE PICKER ---
-function initDatePicker() {
+// --- DATE PICKER with fallback to most recent available date ---
+// If today's date has no data, will query the backend (no-date endpoint)
+// to find the most recent timestamp and set the date picker to that day.
+async function initDatePicker() {
   const input = document.getElementById('day-select');
   if (!input) return;
 
-  // Default to today
+  // default to today
   const today = new Date().toISOString().split('T')[0];
   input.value = today;
-  fetchHistoricalData(today);
 
-  // Update chart when date changes
-  input.addEventListener('change', () => {
-    fetchHistoricalData(input.value);
+  // try to load today's data first
+  let points = await fetchHistoricalData(today);
+
+  // if no points, try to find latest available date from backend
+  if (!points) {
+    try {
+      // Ask backend for recent rows without date filter (it returns latest 200 rows)
+      // We'll try one metric (temperature) to find the most recent timestamp available.
+      const fallbackRes = await fetch(`${API_BASE}/data/history?metric=temperature`);
+      if (fallbackRes.ok) {
+        const json = await fallbackRes.json();
+        const labels = json.labels || [];
+        if (labels.length > 0) {
+          // Take the last timestamp available and set date picker to that day
+          const lastTs = new Date(labels[labels.length - 1]);
+          if (!isNaN(lastTs.getTime())) {
+            const yyyy = lastTs.getFullYear();
+            const mm = String(lastTs.getMonth() + 1).padStart(2, '0');
+            const dd = String(lastTs.getDate()).padStart(2, '0');
+            const latestDate = `${yyyy}-${mm}-${dd}`;
+            input.value = latestDate;
+            // load charts for that date
+            await fetchHistoricalData(latestDate);
+            return; // done
+          }
+        }
+      } else {
+        console.warn('Fallback history fetch failed', fallbackRes.status);
+      }
+    } catch (err) {
+      console.error('Fallback to latest date failed:', err);
+    }
+  }
+
+  // wire change handler (user picks another date)
+  input.addEventListener('change', async () => {
+    await fetchHistoricalData(input.value);
   });
 }
 
-// --- INITIALIZATION ---
+
+// --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
   initCircularBars();
-  initCharts();
-  initDatePicker();
+  initCharts();       // create chart instances
+  initDatePicker();   // fetches data for default date
   fetchLatestReadings();
   setInterval(fetchLatestReadings, 5000);
-  
 });
