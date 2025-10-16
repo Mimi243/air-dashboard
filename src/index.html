@@ -72,7 +72,7 @@
         <h3 class="mb-4">Live Readings</h3>
 
         <!-- Circular Progress Bars -->
-
+  
     <div class="container mt-4">
   <!-- ALERT ROW -->
     <div class="row mb-4 justify-content-center">
@@ -249,6 +249,51 @@ document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
 // --- Circular progress bars ---
 
 
+const tempCircle = new ProgressBar.Circle('#temperature-progress', {
+  color: '#FF6384',
+  strokeWidth: 8,
+  trailWidth: 4,
+  duration: 1000,
+  text: { value: '0°C' },
+  step: (state, circle) => { circle.setText(circle.text.value); }
+});
+
+const humidityCircle = new ProgressBar.Circle('#humidity-progress', {
+  color: '#36A2EB',
+  strokeWidth: 8,
+  trailWidth: 4,
+  duration: 1000,
+  text: { value: '0%' },
+  step: (state, circle) => { circle.setText(circle.text.value); }
+});
+
+const iaqCircle = new ProgressBar.Circle('#iaq-progress', {
+  color: '#4BC0C0',
+  strokeWidth: 8,
+  trailWidth: 4,
+  duration: 1000,
+  text: { value: '0' },
+  step: (state, circle) => { circle.setText(circle.text.value); }
+});
+
+const vocCircle = new ProgressBar.Circle('#voc-progress', {
+  color: '#FFCE56',
+  strokeWidth: 8,
+  trailWidth: 4,
+  duration: 1000,
+  text: { value: '0 ppb' },
+  step: (state, circle) => { circle.setText(circle.text.value); }
+});
+
+const co2Circle = new ProgressBar.Circle('#co2-progress', {
+  color: '#9966FF',
+  strokeWidth: 8,
+  trailWidth: 4,
+  duration: 1000,
+  text: { value: '0 ppm' },
+  step: (state, circle) => { circle.setText(circle.text.value); }
+});
+
 // --- Live readings fetch & update ---
 async function fetchLiveData() {
   try {
@@ -311,7 +356,7 @@ async function fetchHistoricalData(metric) {
 }
 
 // --- Initialize charts ---
-async function initCharts() {
+/*async function initCharts() {
   const tempData = await fetchHistoricalData("temperature");
   const humData = await fetchHistoricalData("humidity");
   const vocData = await fetchHistoricalData("voc");
@@ -338,12 +383,12 @@ async function initCharts() {
   const iaqChartEl = document.getElementById('iaq-chart').getContext('2d');
   new Chart(iaqChartEl, {...chartOptions, data:{labels:iaqData.labels, datasets:[{label:'IAQ', data:iaqData.values, borderColor:'#4BC0C0', fill:false}]}});
 
-}
+}*/
 
 // --- Start everything ---
 fetchLiveData();
 setInterval(fetchLiveData, 5000); // live readings every 5 sec
-initCharts(); // historical charts once on page load
+//initCharts(); // historical charts once on page load
 </script>
 
 
