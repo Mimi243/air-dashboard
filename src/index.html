@@ -230,9 +230,9 @@ const tempCircle = new ProgressBar.Circle('#temperature-progress', {
       }
     }
   },
-  step: (state, circle) => {
-    circle.setText(circle.text.value);
-  }
+  step: function(state, circle) {
+  // You can leave this empty, or just change color if you want
+}
 });
 
 const humidityCircle = new ProgressBar.Circle('#humidity-progress', {
@@ -257,9 +257,9 @@ const humidityCircle = new ProgressBar.Circle('#humidity-progress', {
       }
     }
   },
-  step: (state, circle) => {
-    circle.setText(circle.text.value);
-  }
+  step: function(state, circle) {
+  // You can leave this empty, or just change color if you want
+}
 });
 
 const iaqCircle = new ProgressBar.Circle('#iaq-progress', {
@@ -284,9 +284,9 @@ const iaqCircle = new ProgressBar.Circle('#iaq-progress', {
       }
     }
   },
-  step: (state, circle) => {
-    circle.setText(circle.text.value);
-  }
+  step: function(state, circle) {
+  // You can leave this empty, or just change color if you want
+}
 });
 
 const vocCircle = new ProgressBar.Circle('#voc-progress', {
@@ -311,9 +311,9 @@ const vocCircle = new ProgressBar.Circle('#voc-progress', {
       }
     }
   },
-  step: (state, circle) => {
-    circle.setText(circle.text.value);
-  }
+  step: function(state, circle) {
+  // You can leave this empty, or just change color if you want
+}
 });
 
 const co2Circle = new ProgressBar.Circle('#co2-progress', {
@@ -338,9 +338,9 @@ const co2Circle = new ProgressBar.Circle('#co2-progress', {
       }
     }
   },
-  step: (state, circle) => {
-    circle.setText(circle.text.value);
-  }
+  step: function(state, circle) {
+  // You can leave this empty, or just change color if you want
+}
 });
 
 // --- Live readings fetch & update ---
