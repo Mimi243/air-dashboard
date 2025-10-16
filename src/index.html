@@ -10,6 +10,22 @@
   <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="shortcut icon" href="assets/images/favicon.png" />
+  <style>
+    /* Custom styling for progress bars */
+    .progress-wrapper {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+    }
+    .progress-wrapper svg {
+      transform: rotate(-90deg);
+    }
+    .progress-wrapper .progressbar-text {
+      font-size: 24px !important;
+      font-weight: bold !important;
+    }
+  </style>
 </head>
 <body>
     <div class="container-scroller">
@@ -32,8 +48,6 @@
       </nav>
 
       <div class="container-fluid page-body-wrapper">
-
-  <!-- Sidebar -->
         <!-- Sidebar -->
         <nav class="sidebar sidebar-offcanvas" id="sidebar">
           <ul class="nav">
@@ -71,8 +85,6 @@
       <div class="content-wrapper">
         <h3 class="mb-4">Live Readings</h3>
 
-        <!-- Circular Progress Bars -->
-  
     <div class="container mt-4">
   <!-- ALERT ROW -->
     <div class="row mb-4 justify-content-center">
@@ -86,13 +98,14 @@
       </div>
     </div>
 
-
   <div class="row mb-4">
     <div class="col-md-6 stretch-card grid-margin">
       <div class="card text-center shadow-sm">
         <div class="card-body">
           <h5>Temperature</h5>
-          <div id="temperature-progress"></div>
+          <div class="progress-wrapper">
+            <div id="temperature-progress"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -100,7 +113,9 @@
       <div class="card text-center shadow-sm">
         <div class="card-body">
           <h5>Humidity</h5>
-          <div id="humidity-progress"></div>
+          <div class="progress-wrapper">
+            <div id="humidity-progress"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -112,7 +127,9 @@
       <div class="card text-center shadow-sm">
         <div class="card-body">
           <h5>TVOC</h5>
-          <div id="voc-progress"></div>
+          <div class="progress-wrapper">
+            <div id="voc-progress"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -120,7 +137,9 @@
       <div class="card text-center shadow-sm">
         <div class="card-body">
           <h5>CO₂</h5>
-          <div id="co2-progress"></div>
+          <div class="progress-wrapper">
+            <div id="co2-progress"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -132,7 +151,9 @@
       <div class="card text-center shadow-sm">
         <div class="card-body">
           <h5>IAQ</h5>
-          <div id="iaq-progress"></div>
+          <div class="progress-wrapper">
+            <div id="iaq-progress"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -153,62 +174,7 @@
         </a>
       </div>
     </div>
-
-        <!-- Historical Charts -->
-         <!-- <div class="row mb-4"> 
-          <div class="col-lg-6 grid-margin stretch-card">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">Temperature History</h4>
-                <canvas id="temperatureChart"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6 grid-margin stretch-card">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">Humidity History</h4>
-                <div class="chart-container"></div>
-                <canvas id="humidityChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row mb-4">
-          <div class="col-lg-6 grid-margin stretch-card">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">IAQ History</h4>
-                <div class="chart-container"></div>
-                <canvas id="iaqChart"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6 grid-margin stretch-card">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">TVOC History</h4>
-                <div class="chart-container"></div>
-                <canvas id="vocChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row mb-4">
-          <div class="col-lg-6 grid-margin stretch-card">
-            <div class="card">
-              <div class="card-body">
-                <h4 class="card-title">ECO2 History</h4>
-                <div class="chart-container"></div>
-                <canvas id="co2Chart"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6 grid-margin stretch-card d-flex align-items-center justify-content-center">
-            <a href="subscriber.html" class="btn btn-primary mt-3">Subscribe</a>
-          </div>
-        </div>
-      </div> -->
+    </div>
 
       <!-- Footer -->
       <footer class="footer">
@@ -233,11 +199,6 @@
 <script src="assets/js/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
 
-<!-- Removed duplicate circular progress bar and live data script to fix redeclaration error -->
-
-<!-- Removed duplicate savedEmail declaration to fix redeclaration error -->
-
-
 <script>
 const API_URL = "https://air-api-9qw4.onrender.com";
 
@@ -247,51 +208,139 @@ document.getElementById("subscriber-email-top").innerText = savedEmail;
 document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
 
 // --- Circular progress bars ---
-
-
 const tempCircle = new ProgressBar.Circle('#temperature-progress', {
   color: '#FF6384',
-  strokeWidth: 8,
+  trailColor: '#eee',
   trailWidth: 4,
-  duration: 1000,
-  text: { value: '0°C' },
-  step: (state, circle) => { circle.setText(circle.text.value); }
+  strokeWidth: 6,
+  duration: 1400,
+  easing: 'easeInOut',
+  text: {
+    value: '0°C',
+    style: {
+      color: '#FF6384',
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      padding: 0,
+      margin: 0,
+      transform: {
+        prefix: true,
+        value: 'translate(-50%, -50%)'
+      }
+    }
+  },
+  step: (state, circle) => {
+    circle.setText(circle.text.value);
+  }
 });
 
 const humidityCircle = new ProgressBar.Circle('#humidity-progress', {
   color: '#36A2EB',
-  strokeWidth: 8,
+  trailColor: '#eee',
   trailWidth: 4,
-  duration: 1000,
-  text: { value: '0%' },
-  step: (state, circle) => { circle.setText(circle.text.value); }
+  strokeWidth: 6,
+  duration: 1400,
+  easing: 'easeInOut',
+  text: {
+    value: '0%',
+    style: {
+      color: '#36A2EB',
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      padding: 0,
+      margin: 0,
+      transform: {
+        prefix: true,
+        value: 'translate(-50%, -50%)'
+      }
+    }
+  },
+  step: (state, circle) => {
+    circle.setText(circle.text.value);
+  }
 });
 
 const iaqCircle = new ProgressBar.Circle('#iaq-progress', {
   color: '#4BC0C0',
-  strokeWidth: 8,
+  trailColor: '#eee',
   trailWidth: 4,
-  duration: 1000,
-  text: { value: '0' },
-  step: (state, circle) => { circle.setText(circle.text.value); }
+  strokeWidth: 6,
+  duration: 1400,
+  easing: 'easeInOut',
+  text: {
+    value: '0',
+    style: {
+      color: '#4BC0C0',
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      padding: 0,
+      margin: 0,
+      transform: {
+        prefix: true,
+        value: 'translate(-50%, -50%)'
+      }
+    }
+  },
+  step: (state, circle) => {
+    circle.setText(circle.text.value);
+  }
 });
 
 const vocCircle = new ProgressBar.Circle('#voc-progress', {
   color: '#FFCE56',
-  strokeWidth: 8,
+  trailColor: '#eee',
   trailWidth: 4,
-  duration: 1000,
-  text: { value: '0 ppb' },
-  step: (state, circle) => { circle.setText(circle.text.value); }
+  strokeWidth: 6,
+  duration: 1400,
+  easing: 'easeInOut',
+  text: {
+    value: '0 ppb',
+    style: {
+      color: '#FFCE56',
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      padding: 0,
+      margin: 0,
+      transform: {
+        prefix: true,
+        value: 'translate(-50%, -50%)'
+      }
+    }
+  },
+  step: (state, circle) => {
+    circle.setText(circle.text.value);
+  }
 });
 
 const co2Circle = new ProgressBar.Circle('#co2-progress', {
   color: '#9966FF',
-  strokeWidth: 8,
+  trailColor: '#eee',
   trailWidth: 4,
-  duration: 1000,
-  text: { value: '0 ppm' },
-  step: (state, circle) => { circle.setText(circle.text.value); }
+  strokeWidth: 6,
+  duration: 1400,
+  easing: 'easeInOut',
+  text: {
+    value: '0 ppm',
+    style: {
+      color: '#9966FF',
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      padding: 0,
+      margin: 0,
+      transform: {
+        prefix: true,
+        value: 'translate(-50%, -50%)'
+      }
+    }
+  },
+  step: (state, circle) => {
+    circle.setText(circle.text.value);
+  }
 });
 
 // --- Live readings fetch & update ---
@@ -300,13 +349,26 @@ async function fetchLiveData() {
     const res = await fetch(`${API_URL}/data/latest-single`);
     const data = await res.json();
 
-    
-
-    if(data.temperature !== null) { tempCircle.set(data.temperature/50); tempCircle.setText(`${data.temperature}°C`); }
-    if(data.humidity !== null) { humidityCircle.set(data.humidity/100); humidityCircle.setText(`${data.humidity}%`); }
-    if(data.iaq !== null) { iaqCircle.set(data.iaq/500); iaqCircle.setText(`${data.iaq}`); }
-    if(data.voc !== null) { vocCircle.set(data.voc/1000); vocCircle.setText(`${data.voc} ppb`); }
-    if(data.co2 !== null) { co2Circle.set(data.co2/2000); co2Circle.setText(`${data.co2} ppm`); }
+    if(data.temperature !== null) { 
+      tempCircle.animate(data.temperature/50);
+      tempCircle.setText(`${data.temperature.toFixed(2)}°C`);
+    }
+    if(data.humidity !== null) {
+      humidityCircle.animate(data.humidity/100);
+      humidityCircle.setText(`${data.humidity.toFixed(2)}%`);
+    }
+    if(data.iaq !== null) {
+      iaqCircle.animate(data.iaq/500);
+      iaqCircle.setText(`${data.iaq.toFixed(2)}`);
+    }
+    if(data.voc !== null) {
+      vocCircle.animate(data.voc/1000);
+      vocCircle.setText(`${data.voc.toFixed(2)} ppb`);
+    }
+    if(data.co2 !== null) {
+      co2Circle.animate(data.co2/2000);
+      co2Circle.setText(`${data.co2.toFixed(2)} ppm`);
+    }
 
     // Update alert card
     let alerts = [];
@@ -342,57 +404,10 @@ async function fetchLiveData() {
   }
 }
 
-// --- Historical data for charts ---
-async function fetchHistoricalData(metric) {
-  try {
-    const res = await fetch(`${API_URL}/data/history?metric=${metric}`);
-    if(!res.ok) throw new Error("Failed to fetch history");
-    const data = await res.json(); // { labels: [...], values: [...] }
-    return data;
-  } catch(err){
-    console.error(`Error fetching ${metric} history:`, err);
-    return {labels:[], values:[]};
-  }
-}
-
-// --- Initialize charts ---
-/*async function initCharts() {
-  const tempData = await fetchHistoricalData("temperature");
-  const humData = await fetchHistoricalData("humidity");
-  const vocData = await fetchHistoricalData("voc");
-  const co2Data = await fetchHistoricalData("co2");
-  const iaqData = await fetchHistoricalData("iaq");
-
-  const chartOptions = {
-    type: 'line',
-    options: { responsive: true, plugins: { legend: { display: true } } }
-  };
-
-  const tempChartEl = document.getElementById('temp-chart').getContext('2d');
-  new Chart(tempChartEl, {...chartOptions, data:{labels:tempData.labels, datasets:[{label:'Temperature (°C)', data:tempData.values, borderColor:'#FF6384', fill:false}]}});
-
-  const humChartEl = document.getElementById('humidity-chart').getContext('2d');
-  new Chart(humChartEl, {...chartOptions, data:{labels:humData.labels, datasets:[{label:'Humidity (%)', data:humData.values, borderColor:'#36A2EB', fill:false}]}});
-
-  const vocChartEl = document.getElementById('voc-chart').getContext('2d');
-  new Chart(vocChartEl, {...chartOptions, data:{labels:vocData.labels, datasets:[{label:'VOC (ppb)', data:vocData.values, borderColor:'#FFCE56', fill:false}]}});
-
-  const co2ChartEl = document.getElementById('co2-chart').getContext('2d');
-  new Chart(co2ChartEl, {...chartOptions, data:{labels:co2Data.labels, datasets:[{label:'CO2 (ppm)', data:co2Data.values, borderColor:'#9966FF', fill:false}]}});
-
-  const iaqChartEl = document.getElementById('iaq-chart').getContext('2d');
-  new Chart(iaqChartEl, {...chartOptions, data:{labels:iaqData.labels, datasets:[{label:'IAQ', data:iaqData.values, borderColor:'#4BC0C0', fill:false}]}});
-
-}*/
-
 // --- Start everything ---
 fetchLiveData();
 setInterval(fetchLiveData, 5000); // live readings every 5 sec
-//initCharts(); // historical charts once on page load
 </script>
-
-
-
 
 </body>
 </html>

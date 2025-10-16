@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Air Dashboard Charts</title>
 
-    <!-- BootstrapDash CSS -->
-    <link rel="stylesheet" href="../../assets/vendors/mdi/css/materialdesignicons.min.css" />
-    <link rel="stylesheet" href="../../assets/vendors/ti-icons/css/themify-icons.css" />
-    <link rel="stylesheet" href="../../assets/vendors/css/vendor.bundle.base.css" />
-    <link rel="stylesheet" href="../../assets/vendors/font-awesome/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="../../assets/css/style.css" />
-    <link rel="shortcut icon" href="../../assets/images/favicon.png" />
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css" />
+    <link rel="stylesheet" href="assets/vendors/ti-icons/css/themify-icons.css" />
+    <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css" />
+    <link rel="stylesheet" href="assets/vendors/font-awesome/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <link rel="shortcut icon" href="assets/images/favicon.png" />
   </head>
 
   <body>
@@ -89,8 +88,6 @@
                   </div>
                 </div>
               </div>
-
-            <!-- Circular progress indicators -->
 
             <!-- Line Charts -->
             <div class="row">
@@ -179,24 +176,16 @@
 <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
 
-
-
-    <!-- Custom JS -->
-    <script src="assets/js/chart.js"></script>
-
-
 <script>
+  const API_URL = "https://air-api-9qw4.onrender.com";
+
   // Display subscriber email from localStorage
   const savedEmail = localStorage.getItem("subscriberEmail") || "subscriber@example.com";
   document.getElementById("subscriber-email-top").innerText = savedEmail;
   document.getElementById("subscriber-email-sidebar").innerText = savedEmail;
-</script>
-    
 
-<!-- <script>
-  const API_URL = "https://air-api-9qw4.onrender.com";
-
-  /*async function fetchHistory(metric = "temperature", date = null) {
+  // Fetch historical data
+  async function fetchHistory(metric, date = null) {
     try {
       const url = new URL(`${API_URL}/data/history`);
       url.searchParams.set("metric", metric);
@@ -206,44 +195,78 @@
       if (!res.ok) throw new Error("Failed to fetch history data");
 
       const data = await res.json();
-      return data; // { labels: [...], values: [...] }
+      return data;
     } catch (err) {
       console.error("Error fetching historical data:", err);
       return { labels: [], values: [] };
     }
-  }*/
+  }
 
-  async function renderTemperatureChart() {
-    const ctx = document.getElementById("temperatureChart").getContext("2d");
-    const data = await fetchHistory("temperature");
+  let charts = {};
 
-    new Chart(ctx, {
+  async function renderChart(canvasId, metric, title, color) {
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    const data = await fetchHistory(metric);
+
+    if (charts[canvasId]) {
+      charts[canvasId].destroy();
+    }
+
+    charts[canvasId] = new Chart(ctx, {
       type: "line",
       data: {
         labels: data.labels,
         datasets: [{
-          label: "Temperature (°C)",
+          label: title,
           data: data.values,
-          borderColor: "rgba(255, 99, 132, 1)",
-          backgroundColor: "rgba(255, 99, 132, 0.2)",
-          tension: 0.2,
+          borderColor: color,
+          backgroundColor: color + '33',
+          tension: 0.4,
+          fill: true,
         }],
       },
       options: {
         responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { display: true },
+          zoom: {
+            zoom: {
+              wheel: { enabled: true },
+              pinch: { enabled: true },
+              mode: 'x',
+            },
+            pan: {
+              enabled: true,
+              mode: 'x',
+            }
+          }
+        },
         scales: {
           x: { display: true, title: { display: true, text: "Time" } },
-          y: { display: true, title: { display: true, text: "°C" } },
+          y: { display: true, title: { display: true, text: title } },
         },
       },
     });
   }
 
-  // Call the function to render chart when page loads
-  // renderTemperatureChart();
-</script>-->
+  async function loadAllCharts(date = null) {
+    await renderChart("temperatureChart", "temperature", "Temperature (°C)", "rgba(255, 99, 132, 1)");
+    await renderChart("humidityChart", "humidity", "Humidity (%)", "rgba(54, 162, 235, 1)");
+    await renderChart("iaqChart", "iaq", "IAQ", "rgba(75, 192, 192, 1)");
+    await renderChart("vocChart", "voc", "TVOC (ppb)", "rgba(255, 206, 86, 1)");
+    await renderChart("co2Chart", "co2", "CO₂ (ppm)", "rgba(153, 102, 255, 1)");
+  }
 
+  // Load charts on page load
+  loadAllCharts();
 
+  // Date filter
+  document.getElementById("day-select").addEventListener("change", (e) => {
+    const selectedDate = e.target.value;
+    loadAllCharts(selectedDate);
+  });
+</script>
 
   </body>
 </html>
