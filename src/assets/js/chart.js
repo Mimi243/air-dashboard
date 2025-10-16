@@ -9,10 +9,44 @@ const metrics = [
   { key: 'co2', label: 'eCO₂', maxValue: 2000, unit: 'ppm' }
 ];
 
+let circularMapping = {};
 let chartsMapping = {};
 
-// ❌ REMOVED initCircularBars() - this was creating duplicate progress bars!
-// ❌ REMOVED fetchLatestReadings() - index.html handles this already!
+// --- CIRCULAR PROGRESS BARS (unchanged) ---
+function initCircularBars() {
+  metrics.forEach(metric => {
+    const elId = `${metric.key}-progress`;
+    if (document.getElementById(elId)) {
+      circularMapping[metric.key] = new ProgressBar.Circle(`#${elId}`, {
+        strokeWidth: 6,
+        color: '#36A2EB',
+        trailColor: '#eee',
+        trailWidth: 6,
+        text: { value: '0', style: { color: '#333', fontSize: '18px' } },
+        svgStyle: { width: '80px', height: '80px' }
+      });
+    }
+  });
+}
+
+async function fetchLatestReadings() {
+  if (Object.keys(circularMapping).length === 0) return;
+  try {
+    const res = await fetch(`${API_BASE}/data/latest-single`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const latest = await res.json();
+    metrics.forEach(metric => {
+      const circle = circularMapping[metric.key];
+      if (circle && latest[metric.key] !== null && latest[metric.key] !== undefined) {
+        const ratio = Math.min(Number(latest[metric.key]) / metric.maxValue, 1);
+        circle.set(ratio);
+        circle.setText(`${latest[metric.key]}${metric.unit}`);
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching latest readings:', err);
+  }
+}
 
 // --- CHARTS INITIALIZATION (CATEGORY X-AXIS for simplicity) ---
 function initCharts() {
@@ -26,19 +60,6 @@ function initCharts() {
     if (container && !container.style.height) container.style.height = '300px';
 
     const ctx = canvasEl.getContext('2d');
-    
-    // Define colors matching index.html
-    const colors = {
-      'temperature': 'rgba(255, 99, 132, 1)',
-      'humidity': 'rgba(54, 162, 235, 1)',
-      'iaq': 'rgba(75, 192, 192, 1)',
-      'voc': 'rgba(255, 206, 86, 1)',
-      'co2': 'rgba(153, 102, 255, 1)'
-    };
-    
-    const chartColor = colors[metric.key] || '#36A2EB';
-    const bgColor = chartColor.replace('1)', '0.15)');
-    
     chartsMapping[metric.key] = new Chart(ctx, {
       type: 'line',
       data: {
@@ -46,8 +67,8 @@ function initCharts() {
         datasets: [{
           label: metric.label,
           data: [], // numeric values
-          borderColor: chartColor,
-          backgroundColor: bgColor,
+          borderColor: '#36A2EB',
+          backgroundColor: 'rgba(54,162,235,0.15)',
           tension: 0.3,
           pointRadius: 0
         }]
@@ -171,8 +192,9 @@ function initDatePicker() {
 
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
-  // ❌ REMOVED initCircularBars() call
+  initCircularBars();
   initCharts();
   initDatePicker();
-  // ❌ REMOVED fetchLatestReadings() calls - index.html handles this
+  fetchLatestReadings();
+  setInterval(fetchLatestReadings, 5000);
 });
